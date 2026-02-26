@@ -2808,6 +2808,35 @@ service cloud.firestore {
      GLOBAL MODALS (position:fixed - accessible dari semua tab)
      ══════════════════════════════════════════ -->
 
+
+
+
+
+</div><!-- /spa-body -->
+
+  <!-- ── BOTTOM NAVIGATION ── -->
+  <nav id="bottom-nav">
+    <button class="bnav-btn active" id="bnav-tartil" onclick="spaSwitch('tartil')">
+      <span class="bnav-icon">🎙</span>
+      <span class="bnav-label">Tartil</span>
+    </button>
+    <button class="bnav-btn" id="bnav-panduan" onclick="spaSwitch('panduan')">
+      <span class="bnav-icon">📚</span>
+      <span class="bnav-label">Panduan</span>
+    </button>
+    <button class="bnav-btn" id="bnav-progress" onclick="spaSwitch('progress')">
+      <span class="bnav-icon">📊</span>
+      <span class="bnav-label">Progress</span>
+    </button>
+    <button class="bnav-btn" id="bnav-ibadah" onclick="spaSwitch('ibadah')">
+      <span class="bnav-icon">🕌</span>
+      <span class="bnav-label">Ibadah</span>
+    </button>
+  </nav>
+
+</div><!-- /spa-root -->
+
+<!-- GLOBAL MODALS — di luar #spa-root, langsung child of <body> -->
 <!-- MODAL LOKASI SHALAT -->
 <div id="lokasiModal" onclick="if(event.target===this)tutupModalLokasi()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;">
   <div style="background:#0D2E2E;border:1px solid rgba(201,162,39,0.35);border-radius:20px;padding:28px 24px;width:90%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,0.7);position:relative;">
@@ -2846,31 +2875,6 @@ service cloud.firestore {
   </div>
 </div>
 
-
-
-</div><!-- /spa-body -->
-
-  <!-- ── BOTTOM NAVIGATION ── -->
-  <nav id="bottom-nav">
-    <button class="bnav-btn active" id="bnav-tartil" onclick="spaSwitch('tartil')">
-      <span class="bnav-icon">🎙</span>
-      <span class="bnav-label">Tartil</span>
-    </button>
-    <button class="bnav-btn" id="bnav-panduan" onclick="spaSwitch('panduan')">
-      <span class="bnav-icon">📚</span>
-      <span class="bnav-label">Panduan</span>
-    </button>
-    <button class="bnav-btn" id="bnav-progress" onclick="spaSwitch('progress')">
-      <span class="bnav-icon">📊</span>
-      <span class="bnav-label">Progress</span>
-    </button>
-    <button class="bnav-btn" id="bnav-ibadah" onclick="spaSwitch('ibadah')">
-      <span class="bnav-icon">🕌</span>
-      <span class="bnav-label">Ibadah</span>
-    </button>
-  </nav>
-
-</div><!-- /spa-root -->
 
 <script>
 /* ════════════════════════════════════════════
