@@ -5671,14 +5671,17 @@ function bukaModalLokasi() {
   if (grid && grid.children.length === 0) {
     Object.keys(KOTA_LIST).sort().forEach(function(nama) {
       var btn = document.createElement('button');
+      btn.type = 'button';
       btn.textContent = nama;
-      btn.style.cssText = 'padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(253,246,232,0.8);font-size:13px;cursor:pointer;font-family:inherit;text-align:center;width:100%;-webkit-tap-highlight-color:transparent;';
+      btn.style.cssText = 'padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(253,246,232,0.8);font-size:13px;cursor:pointer;font-family:inherit;text-align:center;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;';
+      // Gunakan inline onclick agar tap di Android/iOS selalu terdeteksi (beberapa WebView suka bermasalah dengan addEventListener pada elemen dinamis).
+      var lat = KOTA_LIST[nama][0], lon = KOTA_LIST[nama][1];
+      var safeNama = String(nama).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      btn.setAttribute('onclick', "event.stopPropagation(); setShalatLokasi("+lat+","+lon+",'"+safeNama+"')");
       btn.addEventListener('touchstart', function(){ this.style.background='rgba(201,162,39,0.25)'; },{passive:true});
       btn.addEventListener('touchend',   function(){ this.style.background='rgba(255,255,255,0.04)'; },{passive:true});
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        setShalatLokasi(KOTA_LIST[nama][0], KOTA_LIST[nama][1], nama);
-      });
+      grid.appendChild(btn);
+    });
       grid.appendChild(btn);
     });
   }
@@ -5967,6 +5970,18 @@ function checkNearShalat() {
 
 function openKiblat() {
   document.getElementById('kiblatOverlay').classList.add('open');
+  // Jika lokasi belum diatur, arah kiblat tidak bisa dihitung akurat.
+  // Supaya tidak terasa 'macet', arahkan user untuk set lokasi dulu.
+  if (!_shalatLat || !_shalatLon) {
+    var d = document.getElementById('kiblatDesc');
+    var a = document.getElementById('kiblatAngle');
+    var s = document.getElementById('kiblatCompassStatus');
+    if (d) d.textContent = '📍 Lokasi belum diatur. Silakan pilih kota / GPS dulu.';
+    if (a) a.textContent = '—';
+    if (s) s.textContent = 'Buka pengaturan lokasi…';
+    setTimeout(function(){ try{ closeKiblat(); bukaModalLokasi(); }catch(e){} }, 150);
+    return;
+  }
   if (_kiblatAngle===null && _shalatLat!==0) {
     _kiblatAngle = calcKiblatAngle(_shalatLat, _shalatLon);
   }
