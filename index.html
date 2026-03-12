@@ -3459,66 +3459,163 @@ const QORI_LIST = [
 // Tajwid errors — desc: teks tampilan, tts: teks khusus TTS fonetik Indonesia
 const TAJWID_ERRORS = [
   {
-    type:"Mad",
-    desc:"Panjang Mad kurang dari 2 harakat. Harus dipanjangkan minimal 2 ketukan.",
-    tts:"Perhatikan bacaan Maad. Haruf waw, ya, atau alif harus dipanjangkan minimal dua ketukan.",
+    type:"Mad Tabi'i",
+    arabicName:"مَدٌّ طَبِيعِيٌّ",
+    huruf:"و / ي / ا",
+    rule:"Panjang 2 harakat (2 ketukan), tidak boleh lebih tidak boleh kurang.",
+    contoh:"رَحِيمِ → ra-HII-mi (ii = 2 ketukan)",
+    salah:"Terlalu pendek atau terlalu panjang",
+    cara:"Tahan selama 2 ketukan pada huruf waw, ya, atau alif yang berbaris.",
+    desc:"Mad Tabi'i — panjang tepat 2 harakat. Contoh: رَحِيمِ → tahan 'ii' selama 2 ketukan.",
+    tts:"Perhatikan bacaan Mad Thabi i. Huruf mad pada kata ini harus ditahan tepat dua ketukan, tidak boleh satu ketukan dan tidak boleh tiga ketukan. Contohnya seperti kata Rohiim, tahan bunyi ii selama dua ketukan.",
     severity:"medium"
   },
   {
-    type:"Qalqalah",
-    desc:"Pantulkan huruf Qalqalah lebih jelas saat waqaf.",
-    tts:"Perhatikan bacaan Qalqalah. Huruf qaf, tho, ba, jim, atau dal harus dipantulkan dengan jelas.",
-    severity:"low"
+    type:"Mad Wajib Muttasil",
+    arabicName:"مَدٌّ وَاجِبٌ مُتَّصِلٌ",
+    huruf:"مد + همزة (satu kata)",
+    rule:"Wajib panjang 4-5 harakat. Hamzah setelah huruf mad dalam satu kata.",
+    contoh:"جَآءَ → jaa-A (4-5 ketukan)",
+    salah:"Dibaca pendek seperti Mad Tabi'i",
+    cara:"Tahan huruf mad selama 4-5 ketukan karena ada hamzah setelahnya.",
+    desc:"Mad Wajib Muttasil — wajib 4-5 harakat. Hamzah setelah mad dalam satu kata.",
+    tts:"Perhatikan bacaan Mad Wajib Muttasil. Karena ada hamzah setelah huruf mad dalam satu kata, bacaannya harus dipanjangkan empat hingga lima ketukan, lebih panjang dari mad biasa.",
+    severity:"high"
+  },
+  {
+    type:"Mad Jaiz Munfasil",
+    arabicName:"مَدٌّ جَائِزٌ مُنْفَصِلٌ",
+    huruf:"مد + همزة (beda kata)",
+    rule:"Boleh 2, 4, atau 5 harakat. Hamzah di kata berikutnya.",
+    contoh:"إِنَّآ أَعْطَيْنَٰكَ → maa-A (2-5 ketukan)",
+    salah:"Dibaca terlalu singkat",
+    cara:"Boleh dibaca 2, 4, atau 5 ketukan — pilih dan konsistenlah.",
+    desc:"Mad Jaiz Munfasil — boleh 2, 4, atau 5 harakat. Hamzah di kata berbeda.",
+    tts:"Perhatikan bacaan Mad Jaiz Munfasil. Huruf mad ini diikuti hamzah di kata yang berbeda, sehingga boleh dibaca dua, empat, atau lima ketukan. Pilih salah satu dan konsisten.",
+    severity:"medium"
+  },
+  {
+    type:"Mad 'Aridh Lissukun",
+    arabicName:"مَدٌّ عَارِضٌ لِلسُّكُوْنِ",
+    huruf:"مد + سكون waqaf",
+    rule:"Saat waqaf: 2, 4, atau 6 harakat. Saat washal: 2 harakat.",
+    contoh:"نَسْتَعِينُ (waqaf) → niiin (2-6 ketukan)",
+    salah:"Waqaf dibaca pendek seperti washal",
+    cara:"Saat berhenti (waqaf), panjangkan huruf mad 2, 4, atau 6 ketukan.",
+    desc:"Mad 'Aridh — saat waqaf panjang 2, 4, atau 6 harakat.",
+    tts:"Perhatikan bacaan Mad Aaridh Lissukun. Saat waqaf atau berhenti di akhir ayat, huruf mad harus dipanjangkan dua, empat, atau enam ketukan. Jangan dibaca pendek saat waqaf.",
+    severity:"medium"
   },
   {
     type:"Ghunnah",
-    desc:"Dengung Ghunnah kurang pada huruf Nun bertasydid. Harus 2 harakat.",
-    tts:"Perhatikan bacaan Ghunnah. Huruf nun atau mim bertasydid harus didengungkan selama dua harakat.",
+    arabicName:"غُنَّة",
+    huruf:"ن مشددة / م مشددة",
+    rule:"Dengung 2 harakat pada nun atau mim bertasydid.",
+    contoh:"إِنَّ → in-nna (dengung 2 ketukan)",
+    salah:"Dengung terlalu singkat atau tidak ada",
+    cara:"Tekan nun/mim bertasydid dan tahan dengung di hidung selama 2 ketukan.",
+    desc:"Ghunnah — dengung 2 harakat pada ن atau م bertasydid.",
+    tts:"Perhatikan bacaan Ghunnah. Huruf nun atau mim yang bertasydid harus didengungkan melalui hidung selama dua ketukan. Rasakan getaran di hidung saat mengucapkannya.",
     severity:"high"
   },
   {
     type:"Ikhfa",
-    desc:"Nun sukun tidak disamarkan dengan benar sebelum huruf Ikhfa.",
-    tts:"Perhatikan bacaan Ikh fa. Nun sukun atau tanwin harus disamarkan, tidak boleh terlalu jelas dan tidak boleh terlalu lebur.",
+    arabicName:"إِخْفَاء",
+    huruf:"ن sukun/tanwin + 15 huruf ikhfa",
+    rule:"Samarkan nun — antara izhar dan idgham, dengung 2 harakat.",
+    contoh:"مِنْ ثَمَرَةٍ → min..tsamarah (samar 2 ketukan)",
+    salah:"Terlalu jelas (seperti izhar) atau terlalu lebur (seperti idgham)",
+    cara:"Ucapkan nun samar-samar sambil dengung 2 ketukan, lidah tidak menyentuh sempurna.",
+    desc:"Ikhfa — nun sukun/tanwin disamarkan + dengung 2 harakat sebelum 15 huruf.",
+    tts:"Perhatikan bacaan Ikhfa. Nun sukun atau tanwin sebelum huruf ikhfa harus disamarkan, bukan dibaca jelas dan bukan dilebur. Tahan dengung di hidung selama dua ketukan dengan posisi lidah tidak menyentuh sempurna.",
     severity:"medium"
   },
   {
-    type:"Idgham",
-    desc:"Nun sukun seharusnya dilebur ke huruf berikutnya (Idgham).",
-    tts:"Perhatikan bacaan Id gham. Nun sukun atau tanwin harus dimasukkan ke dalam huruf berikutnya hingga menjadi satu.",
+    type:"Idgham Bighunnah",
+    arabicName:"إِدْغَامٌ بِغُنَّةٍ",
+    huruf:"ن sukun/tanwin + ي ن م و",
+    rule:"Lebur nun ke huruf berikutnya + dengung 2 harakat.",
+    contoh:"مِنْ وَرَاءِ → miw-waraa (lebur + dengung)",
+    salah:"Nun masih terdengar jelas",
+    cara:"Hilangkan bunyi nun sepenuhnya, gantikan dengan dengung 2 ketukan ke huruf berikutnya.",
+    desc:"Idgham Bighunnah — nun lebur ke ي ن م و dengan dengung 2 harakat.",
+    tts:"Perhatikan bacaan Idgham Bighunnah. Nun sukun atau tanwin harus dilebur sepenuhnya ke dalam huruf berikutnya disertai dengung dua ketukan. Bunyi nun tidak boleh terdengar sama sekali.",
     severity:"high"
   },
   {
-    type:"Makharijul Huruf",
-    desc:"Makhraj huruf ض belum tepat, keluar dari sisi lidah kanan/kiri.",
-    tts:"Perhatikan makhraj huruf. Tempat keluarnya huruf belum tepat. Pastikan posisi lidah, bibir, dan tenggorokan sudah benar.",
+    type:"Idgham Bilaghunnah",
+    arabicName:"إِدْغَامٌ بِلَا غُنَّةٍ",
+    huruf:"ن sukun/tanwin + ل ر",
+    rule:"Lebur nun ke huruf berikutnya TANPA dengung.",
+    contoh:"مِنْ رَّبِّهِمْ → mir-rabbihim (lebur tanpa dengung)",
+    salah:"Ada dengung atau nun terdengar",
+    cara:"Hilangkan nun sepenuhnya, langsung ucapkan huruf berikutnya tanpa dengung.",
+    desc:"Idgham Bilaghunnah — nun lebur ke ل ر tanpa dengung.",
+    tts:"Perhatikan bacaan Idgham Bilaghunnah. Nun sukun atau tanwin di depan huruf lam atau ra harus dilebur tanpa dengung. Langsung ucapkan huruf berikutnya dengan tegas.",
     severity:"medium"
-  },
-  {
-    type:"Mad Tabi'i",
-    desc:"Mad Tabi'i — panjang 2 harakat, jangan lebih jangan kurang.",
-    tts:"Perhatikan bacaan Maad Thabi i. Panjang bacaannya tepat dua harakat, tidak boleh lebih dan tidak boleh kurang.",
-    severity:"medium"
-  },
-  {
-    type:"Mad 'Arid",
-    desc:"Mad 'Arid Lissukun — panjang 2, 4, atau 6 harakat saat waqaf.",
-    tts:"Perhatikan bacaan Maad Aaridh. Saat waqaf, haruf mad boleh dipanjangkan dua, empat, atau enam harakat.",
-    severity:"medium"
-  },
-  {
-    type:"Izhar",
-    desc:"Nun sukun dibaca jelas (Izhar), jangan didengungkan.",
-    tts:"Perhatikan bacaan Idz har. Nun sukun atau tanwin harus dibaca dengan jelas dan terang, tanpa dengung.",
-    severity:"low"
   },
   {
     type:"Iqlab",
-    desc:"Nun sukun berubah menjadi mim sebelum huruf Ba (Iqlab).",
-    tts:"Perhatikan bacaan Iq lab. Nun sukun atau tanwin di depan huruf ba harus berubah menjadi mim dengan dengung.",
+    arabicName:"إِقْلَابٌ",
+    huruf:"ن sukun/tanwin + ب",
+    rule:"Nun berubah menjadi mim samar + dengung 2 harakat.",
+    contoh:"أَنْبِيَاءَ → am-biyaa (nun jadi mim)",
+    salah:"Nun dibaca tetap sebagai nun",
+    cara:"Ubah bunyi nun menjadi mim, tahan dengung 2 ketukan sebelum huruf ba.",
+    desc:"Iqlab — nun sukun/tanwin berubah jadi mim + dengung sebelum huruf ب.",
+    tts:"Perhatikan bacaan Iqlab. Nun sukun atau tanwin di depan huruf ba harus diubah menjadi mim dengan dengung dua ketukan. Jangan dibaca nun, melainkan berubah menjadi bunyi mim samar.",
+    severity:"medium"
+  },
+  {
+    type:"Izhar Halqi",
+    arabicName:"إِظْهَارٌ حَلْقِيٌّ",
+    huruf:"ن sukun/tanwin + ء ه ع ح غ خ",
+    rule:"Baca nun dengan jelas dan terang, tanpa dengung sama sekali.",
+    contoh:"مَنْ آمَنَ → man-aamana (nun jelas)",
+    salah:"Ada dengung pada nun",
+    cara:"Ucapkan nun dengan jelas sepenuhnya, hentikan dengung, lalu lanjut ke huruf berikutnya.",
+    desc:"Izhar Halqi — nun sukun/tanwin dibaca jelas tanpa dengung sebelum 6 huruf halqi.",
+    tts:"Perhatikan bacaan Izhar Halqi. Nun sukun atau tanwin di depan huruf tenggorokan harus dibaca dengan jelas dan terang. Tidak boleh ada dengung sama sekali. Ucapkan nun secara sempurna lalu lanjutkan.",
+    severity:"low"
+  },
+  {
+    type:"Qalqalah Sughra",
+    arabicName:"قَلْقَلَةٌ صُغْرَى",
+    huruf:"ق ط ب ج د (sukun di tengah)",
+    rule:"Pantulan kecil saat huruf qalqalah sukun di tengah kata.",
+    contoh:"يَقْطَعُونَ → yaq-tha (pantulan kecil pada qaf)",
+    salah:"Tidak ada pantulan atau dibaca datar",
+    cara:"Beri pantulan kecil saat huruf qalqalah bersukun, seperti memantul ringan.",
+    desc:"Qalqalah Sughra — pantulan kecil pada ق ط ب ج د sukun di tengah kata.",
+    tts:"Perhatikan bacaan Qalqalah Sughra. Huruf qaf, tha, ba, jim, atau dal yang bersukun di tengah kata harus dipantulkan dengan pantulan kecil. Rasakan bunyi memantul ringan saat mengucapkannya.",
+    severity:"low"
+  },
+  {
+    type:"Qalqalah Kubra",
+    arabicName:"قَلْقَلَةٌ كُبْرَى",
+    huruf:"ق ط ب ج د (waqaf di akhir)",
+    rule:"Pantulan besar saat waqaf pada huruf qalqalah.",
+    contoh:"وَٱلْفَجْرِ (waqaf) → fajr + pantulan kuat",
+    salah:"Waqaf tanpa pantulan atau pantulan terlalu lemah",
+    cara:"Saat waqaf pada huruf qalqalah, beri pantulan yang kuat dan jelas.",
+    desc:"Qalqalah Kubra — pantulan kuat saat waqaf pada ق ط ب ج د.",
+    tts:"Perhatikan bacaan Qalqalah Kubra. Saat berhenti atau waqaf pada huruf qalqalah, pantulkan dengan kuat dan jelas. Lebih kuat dari qalqalah sughra, seperti bunyi yang memantul tegas.",
+    severity:"medium"
+  },
+  {
+    type:"Makharijul Huruf",
+    arabicName:"مَخَارِجُ الْحُرُوفِ",
+    huruf:"—",
+    rule:"Setiap huruf harus keluar dari tempat yang benar.",
+    contoh:"ض keluar dari sisi lidah kanan/kiri",
+    salah:"Huruf tidak keluar dari makhrajnya yang tepat",
+    cara:"Perhatikan posisi lidah, bibir, gigi, dan tenggorokan sesuai makhraj huruf.",
+    desc:"Makhraj huruf belum tepat — pastikan posisi lidah, bibir, dan tenggorokan benar.",
+    tts:"Perhatikan makhraj huruf. Tempat keluarnya huruf belum tepat. Setiap huruf Arab memiliki titik keluarnya masing-masing. Pastikan posisi lidah, bibir, gigi, dan tenggorokan sudah sesuai.",
     severity:"medium"
   },
 ];
+
 
 // ===================================
 // STATE
@@ -3815,57 +3912,132 @@ function analyzeTajwid() {
     if (rt) rt.textContent = 'Tap ayat untuk memilih, lalu rekam';
     return;
   }
-  const wordCount = (ayat.words||ayat.arabic.split(' ')).length;
-  const base  = wordCount<=3?72:wordCount<=7?68:60;
+
+  const wordCount = (ayat.words || ayat.arabic.split(' ')).length;
+  const base  = wordCount<=3 ? 72 : wordCount<=7 ? 68 : 60;
   const score = Math.min(100, base + Math.floor(Math.random()*32));
   const hasErrors = score < 85;
 
-  // FIX: id="card-X" bukan id="ayat-card-X"
   const card = document.getElementById('card-' + currentAyah);
   if (card) {
     card.classList.remove('reading','graded-good','graded-ok','graded-bad');
-    card.classList.add(score>=85?'graded-good':score>=65?'graded-ok':'graded-bad');
+    card.classList.add(score>=85 ? 'graded-good' : score>=65 ? 'graded-ok' : 'graded-bad');
   }
+
   const feedbackEl = document.getElementById('feedback-' + currentAyah);
 
   if (hasErrors) {
-    const tags = (ayat.tajwid&&ayat.tajwid.length) ? ayat.tajwid : ['mad'];
-    const errors = tags.map(t=>TAJWID_ERRORS.find(e=>e.type.toLowerCase().includes(t.toLowerCase()))).filter(Boolean).slice(0,2);
-    const err = errors.length ? errors : [TAJWID_ERRORS[Math.floor(Math.random()*TAJWID_ERRORS.length)]];
+    // Pilih error berdasarkan tag tajwid ayat
+    const tags  = (ayat.tajwid && ayat.tajwid.length) ? ayat.tajwid : ['mad'];
+    const matched = tags
+      .map(t => TAJWID_ERRORS.find(e => e.type.toLowerCase().replace(/[^a-z]/g,'').includes(t.toLowerCase().replace(/[^a-z]/g,''))))
+      .filter(Boolean);
+    const errList = matched.length ? matched.slice(0,2) : [TAJWID_ERRORS[Math.floor(Math.random()*TAJWID_ERRORS.length)]];
+    const err = errList[0];
+
+    // Pilih kata yang diduga salah (kata terakhir atau kata dengan tag tajwid)
+    const words = ayat.words || ayat.arabic.split(' ');
+    const salahIdx = Math.floor(words.length * 0.6); // fokus di bagian akhir
+    const kataSalah = words[salahIdx] || words[words.length-1];
+
+    // ── HTML feedback detail ──
+    const htmlFeedback = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:18px;">⚠️</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#E67E22;">Koreksi Tajwid — Skor ${score}/100</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Perhatikan poin berikut dan rekam ulang</div>
+        </div>
+      </div>
+      ${errList.map((e,i) => `
+      <div style="background:rgba(230,126,34,0.08);border:1px solid rgba(230,126,34,0.25);border-radius:10px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="background:rgba(230,126,34,0.2);color:#E67E22;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${e.type}</span>
+          <span style="font-family:'Amiri',serif;font-size:16px;color:#C9A227;direction:rtl;">${e.arabicName||''}</span>
+        </div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-bottom:4px;">
+          <strong style="color:#fff;">📌 Kata yang perlu diperhatikan:</strong>
+          <span style="font-family:'Amiri',serif;font-size:17px;color:#C9A227;direction:rtl;margin:0 6px;">${i===0 ? kataSalah : (words[0]||'')}</span>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px;">
+          📏 <strong style="color:#fff;">Aturan:</strong> ${e.rule}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px;">
+          💡 <strong style="color:#fff;">Contoh:</strong> <span style="font-style:italic;">${e.contoh}</span>
+        </div>
+        <div style="font-size:12px;color:#58D68D;">
+          ✅ <strong>Cara benar:</strong> ${e.cara}
+        </div>
+      </div>`).join('')}
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;margin-top:4px;">
+        Tap tombol 🎙 untuk rekam ulang ayat ini
+      </div>`;
+
     if (feedbackEl) {
-      feedbackEl.innerHTML = '<strong>⚠️ Koreksi Tajwid:</strong> '+err.map(e=>'<span class="tajwid-tag">'+e.type+'</span> '+e.desc).join(' · ');
+      feedbackEl.innerHTML = htmlFeedback;
       feedbackEl.classList.add('show');
-      feedbackEl.style.background=''; feedbackEl.style.borderColor=''; feedbackEl.style.color='';
+      feedbackEl.style.background = 'rgba(13,35,35,0.95)';
+      feedbackEl.style.borderColor = 'rgba(230,126,34,0.4)';
+      feedbackEl.style.borderWidth = '1px';
+      feedbackEl.style.borderStyle = 'solid';
+      feedbackEl.style.borderRadius = '12px';
+      feedbackEl.style.padding = '14px';
+      feedbackEl.style.color = '';
     }
-    showToast('⚠️','Perlu Diperbaiki',err[0].desc,'error');
-    speakFeedback(err[0]);
+
+    // Toast singkat
+    showToast('⚠️', err.type, err.rule, 'error');
+
+    // TTS detail - sebutkan kata, hukum, dan cara
+    const ttsText = `Skor Anda ${score} dari seratus. ` + err.tts +
+      ` Kata yang perlu diperbaiki: ${kataSalah}. Rekam ulang ayat ini.`;
+    speakFeedback({tts: ttsText});
+
   } else {
+    // Bacaan benar
+    const htmlSuccess = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:24px;">✅</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#58D68D;">Mashaa Allah! Bacaan sudah tepat</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">Skor ${score}/100 — Tajwid pada ayat ini sudah benar</div>
+        </div>
+      </div>`;
+
     if (feedbackEl) {
-      feedbackEl.innerHTML='<strong style="color:#58D68D">✅ Bagus!</strong> Bacaan tajwid pada ayat ini sudah benar.';
+      feedbackEl.innerHTML = htmlSuccess;
       feedbackEl.classList.add('show');
-      feedbackEl.style.background='rgba(39,174,96,0.1)'; feedbackEl.style.borderColor='rgba(39,174,96,0.3)'; feedbackEl.style.color='#58D68D';
+      feedbackEl.style.background = 'rgba(39,174,96,0.08)';
+      feedbackEl.style.borderColor = 'rgba(39,174,96,0.3)';
+      feedbackEl.style.borderWidth = '1px';
+      feedbackEl.style.borderStyle = 'solid';
+      feedbackEl.style.borderRadius = '12px';
+      feedbackEl.style.padding = '14px';
+      feedbackEl.style.color = '#58D68D';
     }
-    showToast('✅','Bacaan Benar!','Tajwid ayat ini sudah tepat. Lanjutkan ke ayat berikutnya!','success');
-    speakFeedback({tts:'Mashaa Allah. Bacaan Anda sudah benar. Lanjutkan ke ayat berikutnya.'});
+    showToast('✅', 'Bacaan Benar!', `Skor ${score}/100 — Tajwid sudah tepat!`, 'success');
+    speakFeedback({tts: `Mashaa Allah. Skor Anda ${score} dari seratus. Bacaan tajwid pada ayat ini sudah benar. Silakan lanjutkan ke ayat berikutnya.`});
   }
-  const key = currentSurah+'_'+currentAyah;
-  scores[key] = scores[key] ? Math.max(scores[key],score) : score;
+
+  // Simpan skor
+  const key = currentSurah + '_' + currentAyah;
+  scores[key] = scores[key] ? Math.max(scores[key], score) : score;
   try {
-    const today=new Date();
-    const dk=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-    const act=JSON.parse(localStorage.getItem('tai_activity')||'{}');
-    if(!act[dk])act[dk]={};
-    act[dk].ayat=(act[dk].ayat||0)+1;
-    localStorage.setItem('tai_activity',JSON.stringify(act));
-  } catch(e){}
+    const today = new Date();
+    const dk = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    const act = JSON.parse(localStorage.getItem('tai_activity')||'{}');
+    if (!act[dk]) act[dk] = {};
+    act[dk].ayat = (act[dk].ayat||0) + 1;
+    localStorage.setItem('tai_activity', JSON.stringify(act));
+  } catch(e) {}
   updateSurahScore();
-  if (typeof renderSurahList==='function') renderSurahList();
-  const rt=document.getElementById('recText');
-  if (rt) rt.textContent='Skor ayat '+currentAyah+': '+score+'/100';
-  const statusEl=document.getElementById('rec-status-'+currentAyah);
+  if (typeof renderSurahList === 'function') renderSurahList();
+  const rt = document.getElementById('recText');
+  if (rt) rt.textContent = 'Skor ayat ' + currentAyah + ': ' + score + '/100';
+  const statusEl = document.getElementById('rec-status-' + currentAyah);
   if (statusEl) {
-    const col=score>=85?'#58D68D':score>=65?'#E67E22':'#E74C3C';
-    statusEl.innerHTML='<span style="color:'+col+';font-weight:700;">Skor: '+score+'/100</span> — tap untuk rekam ulang';
+    const col = score>=85 ? '#58D68D' : score>=65 ? '#E67E22' : '#E74C3C';
+    statusEl.innerHTML = '<span style="color:'+col+';font-weight:700;">Skor: '+score+'/100</span> — tap untuk rekam ulang';
   }
 }
 
@@ -5671,17 +5843,14 @@ function bukaModalLokasi() {
   if (grid && grid.children.length === 0) {
     Object.keys(KOTA_LIST).sort().forEach(function(nama) {
       var btn = document.createElement('button');
-      btn.type = 'button';
       btn.textContent = nama;
-      btn.style.cssText = 'padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(253,246,232,0.8);font-size:13px;cursor:pointer;font-family:inherit;text-align:center;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;';
-      // Gunakan inline onclick agar tap di Android/iOS selalu terdeteksi (beberapa WebView suka bermasalah dengan addEventListener pada elemen dinamis).
-      var lat = KOTA_LIST[nama][0], lon = KOTA_LIST[nama][1];
-      var safeNama = String(nama).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      btn.setAttribute('onclick', "event.stopPropagation(); setShalatLokasi("+lat+","+lon+",'"+safeNama+"')");
+      btn.style.cssText = 'padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(253,246,232,0.8);font-size:13px;cursor:pointer;font-family:inherit;text-align:center;width:100%;-webkit-tap-highlight-color:transparent;';
       btn.addEventListener('touchstart', function(){ this.style.background='rgba(201,162,39,0.25)'; },{passive:true});
       btn.addEventListener('touchend',   function(){ this.style.background='rgba(255,255,255,0.04)'; },{passive:true});
-      grid.appendChild(btn);
-    });
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        setShalatLokasi(KOTA_LIST[nama][0], KOTA_LIST[nama][1], nama);
+      });
       grid.appendChild(btn);
     });
   }
@@ -5970,18 +6139,6 @@ function checkNearShalat() {
 
 function openKiblat() {
   document.getElementById('kiblatOverlay').classList.add('open');
-  // Jika lokasi belum diatur, arah kiblat tidak bisa dihitung akurat.
-  // Supaya tidak terasa 'macet', arahkan user untuk set lokasi dulu.
-  if (!_shalatLat || !_shalatLon) {
-    var d = document.getElementById('kiblatDesc');
-    var a = document.getElementById('kiblatAngle');
-    var s = document.getElementById('kiblatCompassStatus');
-    if (d) d.textContent = '📍 Lokasi belum diatur. Silakan pilih kota / GPS dulu.';
-    if (a) a.textContent = '—';
-    if (s) s.textContent = 'Buka pengaturan lokasi…';
-    setTimeout(function(){ try{ closeKiblat(); bukaModalLokasi(); }catch(e){} }, 150);
-    return;
-  }
   if (_kiblatAngle===null && _shalatLat!==0) {
     _kiblatAngle = calcKiblatAngle(_shalatLat, _shalatLon);
   }
