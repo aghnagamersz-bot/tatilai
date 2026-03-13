@@ -1231,6 +1231,54 @@
     header { padding-top: env(safe-area-inset-top, 0px); }
     #bottom-nav { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important; }
   }
+
+/* ══ DARK MODE TOGGLE ══ */
+body.light-mode {
+  --teal-dark: #f0ebe0;
+  --cream: #2c1810;
+  --gold: #8B6F15;
+  background: #f5f0e8 !important;
+}
+body.light-mode .ayat-card {
+  background: rgba(255,255,255,0.85) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+body.light-mode header,
+body.light-mode .sidebar,
+body.light-mode #bottom-nav {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+body.light-mode .surah-item:hover { background: rgba(0,0,0,0.04) !important; }
+body.light-mode .surah-name { color: #1a1408 !important; }
+body.light-mode .surah-meta { color: #6b5b3e !important; }
+body.light-mode .search-box {
+  background: rgba(0,0,0,0.05) !important;
+  color: #1a1408 !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+body.light-mode .ayat-arabic { color: #1a1408 !important; }
+body.light-mode .logo-text { color: #1a1408 !important; }
+
+/* Dark mode button */
+#darkModeBtn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--cream);
+  transition: all 0.2s;
+  font-family: inherit;
+}
+#darkModeBtn:hover { background: rgba(255,255,255,0.12); }
+body.light-mode #darkModeBtn {
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.12);
+  color: #1a1408;
+}
+
 </style>
 </head>
 <body>
@@ -1498,7 +1546,8 @@ service cloud.firestore {
       <div class="logo-text">Tartil<span class="logo-ai">AI</span></div>
     </div>
     <div class="header-right">
-      <div class="user-score-badge">⭐ <span id="totalScore">0</span><span class="score-text"> Total Skor</span></div>
+      <div class="user-score-badge">⭐ <span id="totalScore">0</span><span class="score-text"> Total Skor</span>
+      <button id="darkModeBtn" onclick="toggleDarkMode()" title="Ganti Tema">🌙</button></div>
       <div id="userInfo" style="display:none;align-items:center;gap:6px;">
         <img id="userAvatar" src="" alt="" style="width:30px;height:30px;border-radius:50%;border:2px solid rgba(201,162,39,0.5);object-fit:cover;">
         <span id="userName" style="font-size:12px;color:rgba(245,240,232,0.8);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
@@ -2585,7 +2634,7 @@ function renderAyat(surahId) {
 }
 
 // Fetch ayat dari API jika tidak ada di cache/static
-async function fetchAndRenderAyat(surahId) {
+async async function fetchAndRenderAyat(surahId) {
   try {
     const res  = await fetch(`https://api.alquran.cloud/v1/surah/${surahId}`);
     const data = await res.json();
@@ -6514,737 +6563,586 @@ function initDashboard() {
 
 // ── Storage keys ──
 const KEY_MISTAKES  = 'tai_mistakes';   // { surahId_ayahId: [{date,errorType,kata}] }
-const KEY_HAFALAN   = 'tai_hafalan';    // { surahId_ayahId: {mastered:bool,attempts:N} }
-const KEY_VOICE_HIST= 'tai_vsearch';    // [{query,surah,ayah,date}]
 
-// ── State ──
-let hafalanMode      = false;   // mode hafalan aktif
-let peekMode         = false;   // mode intip
-let hafalanProgress  = {};      // { surahId_ayahId: 'hidden'|'peeked'|'revealed'|'correct'|'wrong' }
-let mistakeLog       = [];      // riwayat kesalahan
-let voiceSearchActive= false;
-let voiceSearchRecog = null;    // SpeechRecognition instance
 
-// ══════════════════════════════════════════════════════════════
-// 1. TOOLBAR MODE di atas ayatContainer
-// ══════════════════════════════════════════════════════════════
-function renderModeToolbar() {
-  const existing = document.getElementById('modeToolbar');
-  if (existing) { existing.remove(); }
 
-  const container = document.getElementById('ayatContainer');
+// ══════════════════════════════════════════════════════════════════
+
+
+
+
+// ══════════════════════════════════════════════════════════════════
+// DARK MODE
+// ══════════════════════════════════════════════════════════════════
+(function initDarkMode() {
+  const saved = localStorage.getItem('tai_theme');
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    const btn = document.getElementById('darkModeBtn');
+    if (btn) btn.textContent = '☀️';
+  }
+})();
+
+function toggleDarkMode() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('tai_theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('darkModeBtn');
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STORAGE KEYS
+// ══════════════════════════════════════════════════════════════════
+var KEY_HAFALAN  = 'tai_hafalan';
+var KEY_MISTAKES = 'tai_mistakes';
+var KEY_VSEARCH  = 'tai_vsearch';
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+var hafalanMode     = false;
+var peekMode        = false;
+var hafalanProgress = {};
+
+function loadHafalanData() {
+  try { hafalanProgress = JSON.parse(localStorage.getItem(KEY_HAFALAN) || '{}'); }
+  catch(e) { hafalanProgress = {}; }
+}
+loadHafalanData();
+
+// ══════════════════════════════════════════════════════════════════
+// JUZ DATA (30 Juz)
+// ══════════════════════════════════════════════════════════════════
+var JUZ_DATA = [
+  {juz:1,  surahStart:1},   {juz:2,  surahStart:2},
+  {juz:3,  surahStart:2},   {juz:4,  surahStart:3},
+  {juz:5,  surahStart:4},   {juz:6,  surahStart:4},
+  {juz:7,  surahStart:5},   {juz:8,  surahStart:6},
+  {juz:9,  surahStart:7},   {juz:10, surahStart:8},
+  {juz:11, surahStart:9},   {juz:12, surahStart:11},
+  {juz:13, surahStart:12},  {juz:14, surahStart:14},
+  {juz:15, surahStart:17},  {juz:16, surahStart:18},
+  {juz:17, surahStart:21},  {juz:18, surahStart:23},
+  {juz:19, surahStart:25},  {juz:20, surahStart:27},
+  {juz:21, surahStart:29},  {juz:22, surahStart:33},
+  {juz:23, surahStart:36},  {juz:24, surahStart:39},
+  {juz:25, surahStart:41},  {juz:26, surahStart:46},
+  {juz:27, surahStart:51},  {juz:28, surahStart:58},
+  {juz:29, surahStart:67},  {juz:30, surahStart:78}
+];
+
+function getJuzForSurah(surahId) {
+  var juz = 1;
+  for (var i = 0; i < JUZ_DATA.length; i++) {
+    if (surahId >= JUZ_DATA[i].surahStart) juz = JUZ_DATA[i].juz;
+    else break;
+  }
+  return juz;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PATCH selectSurah — info Juz di header
+// ══════════════════════════════════════════════════════════════════
+var _selectSurahBase = selectSurah;
+selectSurah = function(id) {
+  _selectSurahBase(id);
+  setTimeout(function() {
+    var s   = SURAHS[id - 1];
+    var sub = document.getElementById('surahSub');
+    if (sub && s) {
+      var juz = getJuzForSurah(id);
+      sub.innerHTML = s.type + ' &middot; ' + s.ayat + ' Ayat &middot; Surah ke-' + s.id +
+        ' &nbsp;&middot;&nbsp; <span style="color:var(--gold);cursor:pointer;font-weight:600;" ' +
+        'onclick="showJuzNavigator()">Juz ' + juz + ' &#x1F4D6;</span>';
+    }
+    renderModeToolbar();
+  }, 60);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// PATCH renderAyat — mode hafalan
+// ══════════════════════════════════════════════════════════════════
+var _renderAyatBase = renderAyat;
+renderAyat = function(surahId) {
+  if (!hafalanMode) {
+    _renderAyatBase(surahId);
+    setTimeout(renderModeToolbar, 50);
+    return;
+  }
+  renderAyatHafalan(surahId);
+  setTimeout(renderModeToolbar, 50);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER AYAT MODE HAFALAN
+// ══════════════════════════════════════════════════════════════════
+function renderAyatHafalan(surahId) {
+  var ayats     = getAyatForSurah(surahId);
+  var container = document.getElementById('ayatContainer');
   if (!container) return;
 
-  const toolbar = document.createElement('div');
-  toolbar.id = 'modeToolbar';
-  toolbar.style.cssText = `
-    display:flex;align-items:center;gap:8px;padding:10px 0 14px;
-    flex-wrap:wrap;direction:ltr;`;
-
-  toolbar.innerHTML = `
-    <!-- Mode Hafalan toggle -->
-    <button id="btnHafalanMode"
-      onclick="toggleHafalanMode()"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;
-        border-radius:20px;border:1.5px solid ${hafalanMode?'#C9A227':'rgba(201,162,39,0.3)'};
-        background:${hafalanMode?'rgba(201,162,39,0.18)':'transparent'};
-        color:${hafalanMode?'#C9A227':'rgba(253,248,238,0.5)'};
-        font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
-        transition:all 0.2s;">
-      🧠 Mode Hafalan${hafalanMode?' (Aktif)':''}
-    </button>
-
-    <!-- Peeking mode - hanya muncul saat mode hafalan aktif -->
-    ${hafalanMode ? `
-    <button id="btnPeekMode"
-      onclick="togglePeekMode()"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;
-        border-radius:20px;border:1.5px solid ${peekMode?'#5DADE2':'rgba(93,173,226,0.3)'};
-        background:${peekMode?'rgba(93,173,226,0.15)':'transparent'};
-        color:${peekMode?'#5DADE2':'rgba(253,248,238,0.4)'};
-        font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
-      👁 Mode Intip${peekMode?' (Aktif)':''}
-    </button>` : ''}
-
-    <!-- Voice Search -->
-    <button id="btnVoiceSearch"
-      onclick="startVoiceSearch()"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;
-        border-radius:20px;border:1.5px solid rgba(88,214,141,0.3);
-        background:transparent;color:rgba(88,214,141,0.7);
-        font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;
-        transition:all 0.2s;">
-      🔎 Shazam Qur'an
-    </button>
-
-    <!-- Riwayat Kesalahan -->
-    <button onclick="showMistakeLog()"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;
-        border-radius:20px;border:1.5px solid rgba(231,76,60,0.3);
-        background:transparent;color:rgba(231,76,60,0.7);
-        font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
-      📋 Riwayat Kesalahan
-    </button>
-  `;
-
-  container.parentNode.insertBefore(toolbar, container);
-}
-
-// ══════════════════════════════════════════════════════════════
-// 2. MODE HAFALAN
-// ══════════════════════════════════════════════════════════════
-function toggleHafalanMode() {
-  hafalanMode = !hafalanMode;
-  peekMode    = false;
-  hafalanProgress = {};
-  renderModeToolbar();
-  // Re-render ayat dengan mode baru
-  if (currentSurah) renderAyat(currentSurah);
-  if (hafalanMode) {
-    showToast('🧠', 'Mode Hafalan Aktif',
-      'Ayat tersembunyi. Rekam dari hafalan, lalu sistem akan menampilkan kata per kata.','info');
-    speakFeedback({tts:'Mode hafalan aktif. Ayat tersembunyi. Rekam dari hafalan Anda.'});
-  }
-}
-
-function togglePeekMode() {
-  peekMode = !peekMode;
-  renderModeToolbar();
-  if (currentSurah) renderAyat(currentSurah);
-  showToast('👁', peekMode ? 'Mode Intip Aktif' : 'Mode Intip Nonaktif',
-    peekMode ? 'Tap ayat untuk mengintip sebentar.' : 'Teks kembali tersembunyi.','info');
-}
-
-// Render ayat dengan opsi mode hafalan
-function renderAyatWithHafalanMode(a, surahId) {
-  const key = `${surahId}_${a.id}`;
-  const status = hafalanProgress[key] || 'hidden';
-  const sc = scores[`${surahId}_${a.id}`];
-
-  if (!hafalanMode) {
-    // Mode normal - kembalikan ke renderAyat biasa
-    return null;
-  }
-
-  let arabicContent = '';
-  if (status === 'hidden') {
-    arabicContent = `
-      <div style="direction:rtl;text-align:center;padding:20px 0;">
-        <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-          ${(a.words||a.arabic.split(' ')).map((_,i) =>
-            `<div style="width:${40+Math.random()*20}px;height:28px;background:rgba(201,162,39,0.15);
-              border-radius:4px;border:1px solid rgba(201,162,39,0.2);"></div>`
-          ).join('')}
-        </div>
-        <div style="font-size:11px;color:rgba(245,240,232,0.3);">
-          ${a.words ? a.words.length : a.arabic.split(' ').length} kata tersembunyi
-        </div>
-      </div>`;
-  } else if (status === 'peeked') {
-    arabicContent = `
-      <div style="direction:rtl;text-align:right;line-height:2.4;margin-bottom:12px;
-        word-spacing:6px;font-size:24px;opacity:0.4;filter:blur(4px);transition:all 0.3s;
-        font-family:'Amiri',serif;color:var(--cream);">
-        ${a.arabic}
-      </div>
-      <div style="font-size:11px;color:#5DADE2;text-align:center;">👁 Mode intip — tap lagi untuk menyembunyikan</div>`;
-  } else if (status === 'revealed' || status === 'correct' || status === 'wrong') {
-    const borderColor = status==='correct' ? 'rgba(88,214,141,0.4)' :
-                        status==='wrong'   ? 'rgba(231,76,60,0.4)' : 'rgba(255,255,255,0.1)';
-    arabicContent = `
-      <div style="direction:rtl;text-align:right;line-height:2.4;margin-bottom:12px;
-        word-spacing:6px;font-size:24px;border-left:3px solid ${borderColor};padding-left:10px;">
-        <span style="font-family:'Amiri',serif;color:var(--cream);">${a.arabic}</span>
-      </div>`;
-  }
-
-  const statusIcon = status==='correct' ? '✅' : status==='wrong' ? '❌' : status==='peeked' ? '👁' : '';
-  const statusLabel = status==='correct' ? 'Benar' : status==='wrong' ? 'Perlu ulang' : status==='peeked' ? 'Diintip (-5 poin)' : '';
-
-  return `
-  <div class="ayat-card ${status==='correct'?'graded-good':status==='wrong'?'graded-bad':''}"
-       id="card-${a.id}"
-       onclick="${peekMode && status==='hidden' ? `peekAyah(${a.id})` : `selectAyah(${a.id})`}">
-
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;
-                margin-bottom:10px;direction:ltr;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);
-          border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;
-          color:var(--gold);">${a.id}</span>
-        ${statusIcon ? `<span style="font-size:13px;">${statusIcon}</span>` : ''}
-        ${statusLabel ? `<span style="font-size:10px;color:rgba(255,255,255,0.4);">${statusLabel}</span>` : ''}
-        ${sc ? `<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;
-          background:${sc>=80?'rgba(88,214,141,0.15)':sc>=50?'rgba(230,126,34,0.15)':'rgba(192,57,43,0.15)'};
-          color:${sc>=80?'#58D68D':sc>=50?'#E67E22':'#E74C3C'}">${sc}</span>` : ''}
-      </div>
-      <div style="display:flex;gap:6px;">
-        ${status==='hidden' && peekMode ? `
-        <button onclick="event.stopPropagation();peekAyah(${a.id})"
-          style="background:rgba(93,173,226,0.1);border:1px solid rgba(93,173,226,0.3);
-            border-radius:8px;color:#5DADE2;font-size:11px;padding:4px 10px;
-            cursor:pointer;font-family:inherit;">👁 Intip</button>` : ''}
-        <button onclick="event.stopPropagation();revealAyah(${a.id})"
-          style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);
-            border-radius:8px;color:var(--gold);font-size:11px;padding:4px 10px;
-            cursor:pointer;font-family:inherit;">${status==='hidden'?'🔓 Tampilkan':'🔄 Ulang'}</button>
-        <button id="rec-btn-${a.id}"
-          onclick="event.stopPropagation();startRecordingForAyah(${a.id})"
-          style="background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-            border:none;border-radius:8px;color:var(--teal-dark);font-size:11px;
-            font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit;
-            box-shadow:0 2px 8px rgba(201,162,39,0.3);">🎙 Rekam</button>
-      </div>
-    </div>
-
-    ${arabicContent}
-
-    <!-- Terjemahan -->
-    ${status !== 'hidden' ? `
-    <div style="font-size:12px;color:rgba(245,240,232,0.45);direction:ltr;
-      line-height:1.6;border-top:1px solid rgba(255,255,255,0.06);
-      padding-top:8px;">${a.translation || ''}</div>` : ''}
-
-    <!-- Status rekam -->
-    <div id="rec-status-${a.id}"
-      style="font-size:11px;color:rgba(245,240,232,0.4);direction:ltr;
-             margin-top:6px;min-height:14px;"></div>
-
-    <!-- Feedback tajwid -->
-    <div class="tajwid-feedback" id="feedback-${a.id}"></div>
-  </div>`;
-}
-
-function peekAyah(ayahId) {
-  const key = `${currentSurah}_${ayahId}`;
-  if (hafalanProgress[key] === 'peeked') {
-    hafalanProgress[key] = 'hidden';
-  } else {
-    hafalanProgress[key] = 'peeked';
-    // Penalti -5 poin dari skor
-  }
-  renderAyat(currentSurah);
-}
-
-function revealAyah(ayahId) {
-  const key = `${currentSurah}_${ayahId}`;
-  hafalanProgress[key] = 'revealed';
-  renderAyat(currentSurah);
-}
-
-// ══════════════════════════════════════════════════════════════
-// 3. VOICE SEARCH — "Shazam Al-Qur'an"
-// ══════════════════════════════════════════════════════════════
-function startVoiceSearch() {
-  const SpeechRecog = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecog) {
-    showToast('❌','Tidak Didukung','Browser ini tidak mendukung pengenalan suara.','error');
+  if (!ayats || !ayats.length) {
+    container.innerHTML = '<div style="text-align:center;padding:48px;color:rgba(245,240,232,0.35);">&#9203; Memuat...</div>';
+    fetchAndRenderAyat(surahId);
     return;
   }
 
-  showVoiceSearchModal();
-}
+  var html = '';
+  for (var ai = 0; ai < ayats.length; ai++) {
+    var a      = ayats[ai];
+    var key    = surahId + '_' + a.id;
+    var status = hafalanProgress[key] || 'hidden';
 
-function showVoiceSearchModal() {
-  // Hapus modal lama jika ada
-  const old = document.getElementById('voiceSearchModal');
-  if (old) old.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'voiceSearchModal';
-  modal.style.cssText = `
-    position:fixed;inset:0;z-index:99999;
-    background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
-    display:flex;align-items:center;justify-content:center;`;
-  modal.innerHTML = `
-    <div style="background:#1E2230;border:1px solid rgba(201,162,39,0.3);
-      border-radius:24px;padding:32px 28px;width:90%;max-width:400px;text-align:center;">
-      <div style="font-size:17px;font-weight:700;color:#C9A227;margin-bottom:8px;">
-        🔎 Shazam Qur'an
-      </div>
-      <div style="font-size:12px;color:rgba(245,240,232,0.45);margin-bottom:24px;">
-        Bacakan penggalan ayat yang kamu ingat — sistem akan menemukan surah & ayatnya
-      </div>
-
-      <!-- Visualizer -->
-      <div id="vsVisualizer" style="display:flex;align-items:flex-end;justify-content:center;
-        gap:4px;height:48px;margin-bottom:20px;">
-        ${Array(12).fill(0).map((_,i)=>`
-          <div id="vsBar${i}" style="width:6px;background:rgba(201,162,39,0.3);
-            border-radius:3px;height:8px;transition:height 0.1s;"></div>`).join('')}
-      </div>
-
-      <div id="vsStatus" style="font-size:13px;color:rgba(245,240,232,0.6);
-        margin-bottom:16px;min-height:20px;">Klik mulai untuk merekam...</div>
-
-      <div id="vsTranscript" style="font-family:'Amiri',serif;font-size:20px;
-        color:#C9A227;direction:rtl;min-height:32px;margin-bottom:20px;
-        word-spacing:6px;"></div>
-
-      <div id="vsResult" style="display:none;background:rgba(88,214,141,0.08);
-        border:1px solid rgba(88,214,141,0.25);border-radius:12px;
-        padding:12px;margin-bottom:16px;text-align:left;"></div>
-
-      <div style="display:flex;gap:10px;justify-content:center;">
-        <button id="vsBtnStart" onclick="doVoiceSearch()"
-          style="padding:12px 24px;background:linear-gradient(135deg,#C9A227,#8B6F15);
-            border:none;border-radius:12px;color:#151820;font-size:14px;font-weight:700;
-            cursor:pointer;font-family:inherit;">🎙 Mulai Rekam</button>
-        <button onclick="closeVoiceSearch()"
-          style="padding:12px 20px;background:transparent;border:1px solid rgba(255,255,255,0.15);
-            border-radius:12px;color:rgba(245,240,232,0.6);font-size:14px;
-            cursor:pointer;font-family:inherit;">Tutup</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-}
-
-function doVoiceSearch() {
-  const SpeechRecog = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecog) return;
-
-  const btn = document.getElementById('vsBtnStart');
-  const statusEl = document.getElementById('vsStatus');
-  const transcriptEl = document.getElementById('vsTranscript');
-  if (btn) btn.style.opacity = '0.5';
-
-  voiceSearchRecog = new SpeechRecog();
-  voiceSearchRecog.lang = 'ar-SA';
-  voiceSearchRecog.continuous = false;
-  voiceSearchRecog.interimResults = true;
-  voiceSearchActive = true;
-
-  // Animasi bar
-  const vsAnim = setInterval(() => {
-    for (let i = 0; i < 12; i++) {
-      const bar = document.getElementById(`vsBar${i}`);
-      if (bar) bar.style.height = (8 + Math.random() * 36) + 'px';
-    }
-  }, 120);
-
-  if (statusEl) statusEl.textContent = '🎙 Sedang mendengarkan bacaan Arab...';
-
-  voiceSearchRecog.onresult = (e) => {
-    const transcript = Array.from(e.results)
-      .map(r => r[0].transcript).join('');
-    if (transcriptEl) transcriptEl.textContent = transcript;
-
-    if (e.results[e.results.length-1].isFinal) {
-      clearInterval(vsAnim);
-      if (statusEl) statusEl.textContent = '🔍 Mencari ayat...';
-      searchAyatByText(transcript);
-    }
-  };
-
-  voiceSearchRecog.onerror = () => {
-    clearInterval(vsAnim);
-    if (statusEl) statusEl.textContent = '❌ Gagal mengenali suara. Coba lagi.';
-    if (btn) btn.style.opacity = '1';
-    voiceSearchActive = false;
-  };
-
-  voiceSearchRecog.onend = () => {
-    clearInterval(vsAnim);
-    voiceSearchActive = false;
-    if (btn) btn.style.opacity = '1';
-    // Reset bar
-    for (let i = 0; i < 12; i++) {
-      const bar = document.getElementById(`vsBar${i}`);
-      if (bar) bar.style.height = '8px';
-    }
-  };
-
-  voiceSearchRecog.start();
-}
-
-function searchAyatByText(query) {
-  // Normalize Arab: hapus harakat untuk matching
-  const normalize = (str) => str.replace(/[\u064B-\u065F\u0670]/g, '').trim();
-  const qNorm = normalize(query).split(/\s+/).filter(w => w.length > 2);
-
-  let bestMatch = null;
-  let bestScore = 0;
-
-  // Search di semua STATIC_AYAT
-  Object.keys(STATIC_AYAT).forEach(surahId => {
-    STATIC_AYAT[surahId].forEach(ayat => {
-      const ayatNorm = normalize(ayat.arabic);
-      let matchCount = 0;
-      qNorm.forEach(word => {
-        if (ayatNorm.includes(word)) matchCount++;
-      });
-      if (matchCount > bestScore) {
-        bestScore = matchCount;
-        bestMatch = { surahId: parseInt(surahId), ayahId: ayat.id, ayat };
-      }
-    });
-  });
-
-  // Juga search di terjemahan bahasa Indonesia
-  if (!bestMatch || bestScore < 1) {
-    const qLower = query.toLowerCase();
-    Object.keys(STATIC_AYAT).forEach(surahId => {
-      STATIC_AYAT[surahId].forEach(ayat => {
-        const transNorm = (ayat.translation||'').toLowerCase();
-        if (transNorm.includes(qLower)) {
-          bestMatch = { surahId: parseInt(surahId), ayahId: ayat.id, ayat };
-          bestScore = 999;
-        }
-      });
-    });
-  }
-
-  const resultEl = document.getElementById('vsResult');
-  const statusEl = document.getElementById('vsStatus');
-
-  if (bestMatch && bestScore >= 1) {
-    const surah = SURAHS[bestMatch.surahId - 1] || {name: 'Surah '+bestMatch.surahId};
-    if (resultEl) {
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `
-        <div style="font-size:11px;color:rgba(245,240,232,0.4);margin-bottom:6px;">Ditemukan:</div>
-        <div style="font-size:14px;font-weight:700;color:#3ECF8E;margin-bottom:4px;">
-          📖 ${surah.name} — Ayat ${bestMatch.ayahId}
-        </div>
-        <div style="font-family:'Amiri',serif;font-size:18px;color:#C9A227;
-          direction:rtl;margin-bottom:8px;">${bestMatch.ayat.arabic}</div>
-        <div style="font-size:12px;color:rgba(245,240,232,0.55);">${bestMatch.ayat.translation||''}</div>
-        <button onclick="goToAyat(${bestMatch.surahId},${bestMatch.ayahId});closeVoiceSearch();"
-          style="margin-top:10px;padding:8px 16px;background:linear-gradient(135deg,#C9A227,#8B6F15);
-            border:none;border-radius:8px;color:#151820;font-size:12px;font-weight:700;
-            cursor:pointer;font-family:inherit;">Buka Ayat Ini →</button>`;
-    }
-    if (statusEl) statusEl.textContent = `✅ Cocok ditemukan di ${surah.name}`;
-
-    // Simpan riwayat pencarian
+    var hafData = null;
     try {
-      const hist = JSON.parse(localStorage.getItem(KEY_VOICE_HIST)||'[]');
-      hist.unshift({ query, surahId: bestMatch.surahId, ayahId: bestMatch.ayahId,
-        date: new Date().toISOString() });
-      localStorage.setItem(KEY_VOICE_HIST, JSON.stringify(hist.slice(0,20)));
+      var stored = JSON.parse(localStorage.getItem(KEY_HAFALAN) || '{}');
+      hafData = stored[key] || null;
     } catch(e) {}
 
-  } else {
-    if (statusEl) statusEl.textContent = '❌ Ayat tidak ditemukan. Coba bacakan lebih jelas.';
-    if (resultEl) {
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `<div style="color:rgba(231,76,60,0.8);font-size:13px;">
-        Ayat tidak ditemukan di data offline. Pastikan Anda melafalkan dalam bahasa Arab.</div>`;
+    var mastered = hafData && hafData.mastered;
+    var attempts = hafData ? hafData.attempts : 0;
+
+    // Arabic content berdasarkan status
+    var arabicContent = '';
+    if (status === 'correct' || status === 'revealed') {
+      arabicContent = '<div style="font-family:\'Amiri\',serif;font-size:26px;line-height:2.2;' +
+        'direction:rtl;text-align:right;color:var(--cream);">' + a.arabic + '</div>';
+    } else if (peekMode && status === 'peeked') {
+      arabicContent = '<div onclick="event.stopPropagation();peekAyah(' + surahId + ',' + a.id + ')" ' +
+        'style="font-family:\'Amiri\',serif;font-size:26px;line-height:2.2;direction:rtl;' +
+        'text-align:right;color:var(--cream);filter:blur(5px);cursor:pointer;user-select:none;">' +
+        a.arabic + '</div>' +
+        '<div style="text-align:center;font-size:11px;color:rgba(245,240,232,0.4);margin-top:4px;">Tap lagi untuk sembunyikan</div>';
+    } else {
+      // Placeholder kotak
+      var words  = a.arabic.split(' ');
+      var boxes  = '';
+      for (var wi = 0; wi < words.length; wi++) {
+        var w = words[wi];
+        var bw = Math.max(2, Math.round(w.length * 0.6)) * 14;
+        boxes += '<span style="display:inline-block;height:1.4em;width:' + bw + 'px;' +
+          'background:rgba(201,162,39,0.15);border-radius:4px;margin:2px 4px;' +
+          'vertical-align:middle;border:1px solid rgba(201,162,39,0.2);"></span>';
+      }
+      var peekHint = peekMode
+        ? '<div style="text-align:center;font-size:11px;color:rgba(93,173,226,0.7);margin-top:6px;cursor:pointer;" ' +
+          'onclick="event.stopPropagation();peekAyah(' + surahId + ',' + a.id + ')">&#x1F441;&#xFE0F; Tap untuk intip</div>'
+        : '';
+      arabicContent = '<div style="direction:rtl;text-align:right;line-height:2.4;padding:4px 0;" ' +
+        'onclick="event.stopPropagation();peekAyah(' + surahId + ',' + a.id + ')">' + boxes + '</div>' + peekHint;
     }
+
+    // Status badge
+    var statusBadge = '';
+    if (mastered) {
+      statusBadge = '<span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;' +
+        'background:rgba(88,214,141,0.15);color:#58D68D;">&#x2705; Hafal (' + attempts + '&#xD7;)</span>';
+    } else if (attempts > 0) {
+      statusBadge = '<span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;' +
+        'background:rgba(231,76,60,0.12);color:#E74C3C;">&#x1F504; ' + attempts + '&#xD7; dicoba</span>';
+    }
+
+    var borderColor = status === 'correct' ? 'rgba(88,214,141,0.4)'
+                    : status === 'wrong'   ? 'rgba(231,76,60,0.35)'
+                    : 'rgba(255,255,255,0.07)';
+
+    html += '<div class="ayat-card" id="card-' + a.id + '" ' +
+      'style="border-color:' + borderColor + ';" onclick="selectAyah(' + a.id + ')">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);' +
+          'border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--gold);">' + a.id + '</span>' +
+          statusBadge +
+        '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button onclick="event.stopPropagation();revealAyah(' + surahId + ',' + a.id + ')" ' +
+          'style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);' +
+          'border-radius:8px;color:rgba(245,240,232,0.5);font-size:10px;padding:4px 8px;' +
+          'cursor:pointer;font-family:inherit;">&#x1F441; Tampilkan</button>' +
+          '<button id="rec-btn-' + a.id + '" onclick="event.stopPropagation();startRecordingForAyah(' + a.id + ')" ' +
+          'style="background:linear-gradient(135deg,var(--gold),var(--gold-dark));border:none;' +
+          'border-radius:8px;color:var(--teal-dark);font-size:11px;font-weight:700;padding:4px 12px;' +
+          'cursor:pointer;font-family:inherit;">&#x1F3A4; Rekam</button>' +
+        '</div>' +
+      '</div>' +
+      arabicContent +
+      '<div style="font-size:12px;color:rgba(245,240,232,0.4);direction:ltr;line-height:1.6;' +
+      'border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">' + (a.translation || '') + '</div>' +
+      '<div id="rec-status-' + a.id + '" style="font-size:11px;color:rgba(245,240,232,0.4);' +
+      'direction:ltr;margin-top:6px;min-height:14px;"></div>' +
+      '</div>';
   }
+  container.innerHTML = html;
 }
 
-function goToAyat(surahId, ayahId) {
-  selectSurah(surahId);
-  setTimeout(() => {
-    selectAyah(ayahId);
-    const card = document.getElementById('card-' + ayahId);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 300);
+// ══════════════════════════════════════════════════════════════════
+// MODE HAFALAN
+// ══════════════════════════════════════════════════════════════════
+function toggleHafalanMode() {
+  hafalanMode = !hafalanMode;
+  peekMode    = false;
+  if (currentSurah) renderAyat(currentSurah);
+  showToast(
+    hafalanMode ? '&#x1F9E0; Mode Hafalan Aktif' : '&#x1F4D6; Mode Normal',
+    hafalanMode ? 'Ayat tersembunyi. Tap intip atau langsung rekam.' : 'Mode hafalan dinonaktifkan.',
+    hafalanMode ? 'gold' : 'info'
+  );
 }
 
-function closeVoiceSearch() {
-  if (voiceSearchRecog) { try { voiceSearchRecog.stop(); } catch(e){} }
-  const modal = document.getElementById('voiceSearchModal');
-  if (modal) modal.remove();
+function togglePeekMode() {
+  if (!hafalanMode) return;
+  peekMode = !peekMode;
+  if (currentSurah) renderAyat(currentSurah);
 }
 
-// ══════════════════════════════════════════════════════════════
-// 4. RIWAYAT KESALAHAN
-// ══════════════════════════════════════════════════════════════
+function peekAyah(surahId, ayahId) {
+  if (!hafalanMode) return;
+  var key = surahId + '_' + ayahId;
+  hafalanProgress[key] = hafalanProgress[key] === 'peeked' ? 'hidden' : 'peeked';
+  renderAyat(surahId);
+}
+
+function revealAyah(surahId, ayahId) {
+  var key = surahId + '_' + ayahId;
+  hafalanProgress[key] = 'revealed';
+  renderAyat(surahId);
+}
+
+function markHafalanResult(surahId, ayahId, isCorrect) {
+  if (!hafalanMode) return;
+  var key = surahId + '_' + ayahId;
+  hafalanProgress[key] = isCorrect ? 'correct' : 'wrong';
+  try {
+    var store = JSON.parse(localStorage.getItem(KEY_HAFALAN) || '{}');
+    var entry = store[key] || {mastered: false, attempts: 0, lastDate: null};
+    entry.attempts++;
+    entry.lastDate = new Date().toISOString().slice(0,10);
+    if (entry.attempts >= 3 && isCorrect) entry.mastered = true;
+    store[key] = entry;
+    localStorage.setItem(KEY_HAFALAN, JSON.stringify(store));
+  } catch(e) {}
+  renderAyat(surahId);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PATCH analyzeTajwid — catat kesalahan + tandai hafalan
+// ══════════════════════════════════════════════════════════════════
+var _analyzeTajwidBase = analyzeTajwid;
+analyzeTajwid = function(ayahId) {
+  _analyzeTajwidBase(ayahId);
+  setTimeout(function() {
+    var statusEl = document.getElementById('rec-status-' + ayahId);
+    var text     = statusEl ? statusEl.textContent : '';
+    var score    = parseInt(text) || 0;
+    var isOk     = score >= 70;
+    if (!isOk && currentSurah) {
+      logMistake(currentSurah, ayahId, 'Tajwid', '');
+    }
+    if (hafalanMode && currentSurah) {
+      markHafalanResult(currentSurah, ayahId, isOk);
+    }
+  }, 1800);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// RIWAYAT KESALAHAN
+// ══════════════════════════════════════════════════════════════════
 function logMistake(surahId, ayahId, errorType, kata) {
   try {
-    const key = `${surahId}_${ayahId}`;
-    const log = JSON.parse(localStorage.getItem(KEY_MISTAKES)||'{}');
-    if (!log[key]) log[key] = [];
-    log[key].push({
-      date: new Date().toISOString(),
-      errorType,
-      kata,
-      surahId,
-      ayahId
-    });
-    // Simpan maksimal 10 per ayat
-    log[key] = log[key].slice(-10);
-    localStorage.setItem(KEY_MISTAKES, JSON.stringify(log));
+    var store = JSON.parse(localStorage.getItem(KEY_MISTAKES) || '{}');
+    var key   = surahId + '_' + ayahId;
+    if (!store[key]) store[key] = [];
+    store[key].push({date: new Date().toISOString().slice(0,10), errorType: errorType, kata: kata, surahId: surahId, ayahId: ayahId});
+    if (store[key].length > 10) store[key] = store[key].slice(-10);
+    localStorage.setItem(KEY_MISTAKES, JSON.stringify(store));
   } catch(e) {}
 }
 
 function showMistakeLog() {
-  const old = document.getElementById('mistakeLogModal');
-  if (old) old.remove();
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY_MISTAKES) || '{}'); } catch(e) {}
 
-  let logData = {};
-  try { logData = JSON.parse(localStorage.getItem(KEY_MISTAKES)||'{}'); } catch(e){}
+  var entries = [];
+  var keys = Object.keys(store);
+  for (var ki = 0; ki < keys.length; ki++) {
+    var k    = keys[ki];
+    var logs = store[k];
+    entries.push({key: k, count: logs.length, latest: logs[logs.length-1]});
+  }
+  entries.sort(function(a,b){ return b.count - a.count; });
+  entries = entries.slice(0, 20);
 
-  const entries = Object.entries(logData)
-    .map(([key, mistakes]) => {
-      const [sId, aId] = key.split('_').map(Number);
-      const surah = SURAHS[sId-1] || {name:'Surah '+sId};
-      const lastMistakes = mistakes.slice(-3).reverse();
-      return { key, surah, ayahId: aId, mistakes, lastMistakes, total: mistakes.length };
-    })
-    .sort((a,b) => b.total - a.total)
-    .slice(0, 20);
+  var rows = '';
+  if (entries.length === 0) {
+    rows = '<div style="text-align:center;padding:32px;color:rgba(245,240,232,0.35);">Belum ada riwayat &#x1F389;</div>';
+  } else {
+    for (var ei = 0; ei < entries.length; ei++) {
+      var e  = entries[ei];
+      var s  = SURAHS[(e.latest.surahId || 1) - 1];
+      var sn = s ? s.name : 'Surah ' + e.latest.surahId;
+      rows += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+        'padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.04);' +
+        'margin-bottom:6px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);" ' +
+        'onclick="closeAllModals();selectSurah(' + e.latest.surahId + ');setTimeout(function(){selectAyah(' + e.latest.ayahId + ')},300)">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:600;color:rgba(245,240,232,0.9);">' + sn + ' · Ayat ' + e.latest.ayahId + '</div>' +
+          '<div style="font-size:11px;color:rgba(245,240,232,0.4);margin-top:2px;">' + (e.latest.errorType || 'Tajwid') + '</div>' +
+        '</div>' +
+        '<span style="background:rgba(231,76,60,0.15);color:#E74C3C;font-size:11px;' +
+        'font-weight:700;padding:3px 10px;border-radius:20px;">' + e.count + '&#xD7;</span>' +
+      '</div>';
+    }
+  }
 
-  const modal = document.createElement('div');
-  modal.id = 'mistakeLogModal';
-  modal.style.cssText = `
-    position:fixed;inset:0;z-index:99999;
-    background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
-    display:flex;align-items:flex-start;justify-content:center;
-    overflow-y:auto;padding:20px 0;`;
-  modal.innerHTML = `
-    <div style="background:#1E2230;border:1px solid rgba(231,76,60,0.3);
-      border-radius:24px;padding:28px 24px;width:90%;max-width:440px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <div style="font-size:17px;font-weight:700;color:#F56565;">📋 Riwayat Kesalahan</div>
-        <button onclick="document.getElementById('mistakeLogModal').remove()"
-          style="background:transparent;border:none;color:rgba(255,255,255,0.4);
-            font-size:20px;cursor:pointer;line-height:1;">×</button>
-      </div>
+  var clearBtn = entries.length > 0
+    ? '<button onclick="clearMistakeLog()" style="font-size:11px;padding:5px 10px;border-radius:8px;' +
+      'border:1px solid rgba(231,76,60,0.3);background:transparent;color:rgba(231,76,60,0.7);' +
+      'cursor:pointer;font-family:inherit;">&#x1F5D1; Hapus</button>'
+    : '';
 
-      ${entries.length === 0 ? `
-        <div style="text-align:center;padding:32px;color:rgba(245,240,232,0.3);">
-          <div style="font-size:32px;margin-bottom:12px;">✅</div>
-          <div>Belum ada riwayat kesalahan.<br>Mulai rekam untuk melihat analisis!</div>
-        </div>` :
-        entries.map(e => `
-        <div style="background:rgba(231,76,60,0.05);border:1px solid rgba(231,76,60,0.15);
-          border-radius:12px;padding:14px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <div>
-              <span style="font-size:13px;font-weight:700;color:#F56565;">
-                ${e.surah.name} — Ayat ${e.ayahId}
-              </span>
-              <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:8px;">
-                ${e.total}× kesalahan
-              </span>
-            </div>
-            <button onclick="goToAyat(${e.surah.id||1},${e.ayahId});document.getElementById('mistakeLogModal').remove();"
-              style="font-size:10px;padding:4px 10px;border-radius:8px;
-                background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);
-                color:#C9A227;cursor:pointer;font-family:inherit;">Buka →</button>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">
-            ${e.lastMistakes.map(m => `
-              <span style="font-size:10px;padding:2px 8px;border-radius:20px;
-                background:rgba(231,76,60,0.1);color:rgba(231,76,60,0.8);
-                border:1px solid rgba(231,76,60,0.2);">
-                ${m.errorType}${m.kata ? ': '+m.kata : ''}
-              </span>`).join('')}
-          </div>
-        </div>`).join('')
-      }
-
-      ${entries.length > 0 ? `
-      <button onclick="clearMistakeLog()"
-        style="width:100%;margin-top:10px;padding:10px;background:transparent;
-          border:1px solid rgba(231,76,60,0.2);border-radius:10px;
-          color:rgba(231,76,60,0.5);font-size:12px;cursor:pointer;font-family:inherit;">
-        🗑 Hapus Semua Riwayat
-      </button>` : ''}
-    </div>`;
-  document.body.appendChild(modal);
+  showModal(
+    '&#x1F4CB; Riwayat Kesalahan',
+    rows,
+    clearBtn
+  );
 }
 
 function clearMistakeLog() {
-  if (confirm('Hapus semua riwayat kesalahan?')) {
-    localStorage.removeItem(KEY_MISTAKES);
-    showMistakeLog(); // Re-render
-    showToast('🗑','Riwayat dihapus','Semua riwayat kesalahan telah dihapus.','info');
-  }
+  if (!confirm('Hapus semua riwayat kesalahan?')) return;
+  localStorage.removeItem(KEY_MISTAKES);
+  closeAllModals();
+  showToast('&#x1F5D1; Dihapus', 'Riwayat berhasil dihapus.', 'info');
 }
 
-// ══════════════════════════════════════════════════════════════
-// 5. JUZ NAVIGATOR
-// ══════════════════════════════════════════════════════════════
-const JUZ_DATA = [
-  {juz:1,  start:{surah:1,  ayah:1},   end:{surah:2, ayah:141}},
-  {juz:2,  start:{surah:2,  ayah:142},  end:{surah:2, ayah:252}},
-  {juz:3,  start:{surah:2,  ayah:253},  end:{surah:3, ayah:92}},
-  {juz:28, start:{surah:58, ayah:1},    end:{surah:66,ayah:12}},
-  {juz:29, start:{surah:67, ayah:1},    end:{surah:77,ayah:50}},
-  {juz:30, start:{surah:78, ayah:1},    end:{surah:114,ayah:6}},
-];
+// ══════════════════════════════════════════════════════════════════
+// SHAZAM QUR'AN — VOICE SEARCH
+// ══════════════════════════════════════════════════════════════════
+function startVoiceSearch() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('&#x26A0;&#xFE0F; Tidak didukung', 'Browser tidak mendukung pengenalan suara.', 'error');
+    return;
+  }
 
-function getJuzForSurah(surahId) {
-  const mapping = {
-    1:1, 2:1, 3:3, 4:4, 5:6, 6:7, 7:8, 8:9, 9:10,
-    10:11, 11:11, 12:12, 13:13, 14:13, 15:14, 16:14,
-    17:15, 18:15, 19:16, 20:16, 21:17, 22:17, 23:18,
-    24:18, 25:18, 26:19, 27:19, 28:20, 29:20, 30:21,
-    31:21, 32:21, 33:21, 34:22, 35:22, 36:22, 37:23,
-    38:23, 39:23, 40:24, 41:24, 42:25, 43:25, 44:25,
-    45:25, 46:26, 47:26, 48:26, 49:26, 50:26, 51:26,
-    52:26, 53:27, 54:27, 55:27, 56:27, 57:27, 58:28,
-    59:28, 60:28, 61:28, 62:28, 63:28, 64:28, 65:28,
-    66:28, 67:29, 68:29, 69:29, 70:29, 71:29, 72:29,
-    73:29, 74:29, 75:29, 76:29, 77:29, 78:30, 79:30,
-    80:30, 81:30, 82:30, 83:30, 84:30, 85:30, 86:30,
-    87:30, 88:30, 89:30, 90:30, 91:30, 92:30, 93:30,
-    94:30, 95:30, 96:30, 97:30, 98:30, 99:30, 100:30,
-    101:30, 102:30, 103:30, 104:30, 105:30, 106:30,
-    107:30, 108:30, 109:30, 110:30, 111:30, 112:30,
-    113:30, 114:30
+  var overlayHTML =
+    '<div style="font-size:40px;margin-bottom:12px;" id="vsIcon">&#x1F3A4;</div>' +
+    '<h3 style="font-size:17px;font-weight:700;color:rgba(245,240,232,0.95);margin-bottom:8px;">Shazam Qur\'an</h3>' +
+    '<p id="vsStatus" style="font-size:13px;color:rgba(245,240,232,0.5);margin-bottom:20px;">Bacakan ayat dalam Bahasa Arab...</p>' +
+    '<div id="vsResults" style="margin-bottom:20px;max-height:220px;overflow-y:auto;text-align:left;"></div>' +
+    '<button onclick="closeAllModals()" style="padding:10px 28px;border-radius:12px;' +
+    'border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(245,240,232,0.6);' +
+    'cursor:pointer;font-family:inherit;">Tutup</button>';
+
+  showModal('', overlayHTML, '');
+
+  var recog = new SR();
+  recog.lang = 'ar-SA';
+  recog.continuous = false;
+  recog.interimResults = false;
+
+  var icon   = document.getElementById('vsIcon');
+  var status = document.getElementById('vsStatus');
+  var results= document.getElementById('vsResults');
+
+  if (icon) { icon.textContent = '🔴'; }
+  if (status) status.textContent = 'Mendengarkan... bacakan ayat pelan dan jelas';
+
+  recog.onresult = function(e) {
+    var text = e.results[0][0].transcript;
+    if (status) status.textContent = 'Mencari: "' + text + '"';
+    if (icon)   icon.textContent = '🔍';
+
+    var found = searchAyatByText(text);
+    if (!results) return;
+    if (!found.length) {
+      results.innerHTML = '<div style="color:rgba(245,240,232,0.4);font-size:13px;padding:16px;text-align:center;">Tidak ditemukan. Coba lagi.</div>';
+      return;
+    }
+    var html = '';
+    for (var fi = 0; fi < Math.min(found.length, 5); fi++) {
+      var r = found[fi];
+      var su = SURAHS[r.surahId - 1];
+      var sname = su ? su.name : 'Surah ' + r.surahId;
+      html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);' +
+        'border-radius:12px;padding:12px 14px;margin-bottom:8px;">' +
+        '<div style="font-family:\'Amiri\',serif;font-size:18px;direction:rtl;text-align:right;' +
+        'color:var(--cream);margin-bottom:6px;">' + r.arabic + '</div>' +
+        '<div style="font-size:11px;color:rgba(245,240,232,0.4);margin-bottom:8px;">' + sname + ' &middot; Ayat ' + r.ayahId + '</div>' +
+        '<button onclick="closeAllModals();selectSurah(' + r.surahId + ');setTimeout(function(){selectAyah(' + r.ayahId + ')},300)" ' +
+        'style="font-size:11px;padding:5px 14px;border-radius:8px;background:rgba(201,162,39,0.15);' +
+        'border:1px solid rgba(201,162,39,0.3);color:var(--gold);cursor:pointer;font-family:inherit;font-weight:600;">' +
+        'Buka Ayat &#x2192;</button>' +
+        '</div>';
+    }
+    results.innerHTML = html;
+
+    try {
+      var hist = JSON.parse(localStorage.getItem(KEY_VSEARCH) || '[]');
+      hist.unshift({query: text, surahId: found[0].surahId, ayahId: found[0].ayahId, date: new Date().toISOString().slice(0,10)});
+      localStorage.setItem(KEY_VSEARCH, JSON.stringify(hist.slice(0,20)));
+    } catch(e2) {}
   };
-  return mapping[surahId] || '?';
+
+  recog.onerror = function(e) {
+    if (icon) icon.textContent = '⚠️';
+    if (status) status.textContent = 'Error: ' + e.error + '. Pastikan mikrofon diizinkan.';
+  };
+
+  recog.start();
 }
 
+function searchAyatByText(query) {
+  function stripHarakat(t) {
+    return t.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').replace(/\s+/g,' ').trim().toLowerCase();
+  }
+  var q = stripHarakat(query);
+  if (!q) return [];
+
+  var matches = [];
+  var surahIds = Object.keys(STATIC_AYAT);
+  for (var si = 0; si < surahIds.length; si++) {
+    var sid   = parseInt(surahIds[si]);
+    var ayats = STATIC_AYAT[sid];
+    for (var ai = 0; ai < ayats.length; ai++) {
+      var a     = ayats[ai];
+      var clean = stripHarakat(a.arabic);
+      var score = clean.indexOf(q) >= 0 ? 2 : 0;
+      if (!score) {
+        var words = q.split(' ');
+        for (var wi = 0; wi < words.length; wi++) {
+          if (words[wi].length > 1 && clean.indexOf(words[wi]) >= 0) score++;
+        }
+      }
+      if (score > 0) {
+        matches.push({surahId: sid, ayahId: a.id, arabic: a.arabic, score: score});
+      }
+    }
+  }
+  matches.sort(function(a,b){ return b.score - a.score; });
+  return matches;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// JUZ NAVIGATOR
+// ══════════════════════════════════════════════════════════════════
 function showJuzNavigator() {
-  const old = document.getElementById('juzNavModal');
-  if (old) old.remove();
+  var curJuz = currentSurah ? getJuzForSurah(currentSurah) : 0;
+  var grid   = '';
 
-  // Group surah by juz
-  const juzGroups = {};
-  SURAHS.forEach(s => {
-    const juz = getJuzForSurah(s.id);
-    if (!juzGroups[juz]) juzGroups[juz] = [];
-    juzGroups[juz].push(s);
+  for (var ji = 0; ji < JUZ_DATA.length; ji++) {
+    var j       = JUZ_DATA[ji];
+    var s       = SURAHS[j.surahStart - 1];
+    var sname   = s ? s.name : '';
+    var isActive = curJuz === j.juz;
+    var bg   = isActive ? 'rgba(201,162,39,0.2)'         : 'rgba(255,255,255,0.04)';
+    var bord = isActive ? 'rgba(201,162,39,0.4)'         : 'rgba(255,255,255,0.07)';
+    var col  = isActive ? 'var(--gold)'                  : 'rgba(245,240,232,0.9)';
+    var sid  = j.surahStart;
+    grid += '<div onclick="closeAllModals();selectSurah(' + sid + ')" ' +
+      'style="background:' + bg + ';border:1px solid ' + bord + ';border-radius:12px;' +
+      'padding:12px 8px;text-align:center;cursor:pointer;">' +
+      '<div style="font-size:18px;font-weight:800;color:' + col + ';">' + j.juz + '</div>' +
+      '<div style="font-size:9px;color:rgba(245,240,232,0.4);margin-top:3px;' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + sname + '</div>' +
+      '</div>';
+  }
+
+  var gridWrap = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">' + grid + '</div>';
+  showModal('&#x1F4D6; Navigasi Juz', gridWrap, '');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MODE TOOLBAR
+// ══════════════════════════════════════════════════════════════════
+function renderModeToolbar() {
+  var existing = document.getElementById('modeToolbar');
+  if (existing) existing.remove();
+
+  var container = document.getElementById('ayatContainer');
+  if (!container || !container.parentNode) return;
+
+  var toolbar = document.createElement('div');
+  toolbar.id = 'modeToolbar';
+  toolbar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 0 14px;flex-wrap:wrap;direction:ltr;';
+
+  function mkBtn(label, onclick, active, r, g, b) {
+    var btn = document.createElement('button');
+    var bg  = active ? 'rgba(' + r + ',' + g + ',' + b + ',0.18)' : 'transparent';
+    var brd = active ? 'rgba(' + r + ',' + g + ',' + b + ',0.8)'  : 'rgba(' + r + ',' + g + ',' + b + ',0.35)';
+    var clr = active ? 'rgba(' + r + ',' + g + ',' + b + ',1)'    : 'rgba(' + r + ',' + g + ',' + b + ',0.7)';
+    btn.style.cssText = 'display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;' +
+      'border:1.5px solid ' + brd + ';background:' + bg + ';color:' + clr + ';' +
+      'font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;';
+    btn.innerHTML = label;
+    btn.onclick = onclick;
+    return btn;
+  }
+
+  toolbar.appendChild(mkBtn('&#x1F9E0; Hafalan' + (hafalanMode ? ' &#x2713;' : ''), toggleHafalanMode, hafalanMode, 201, 162, 39));
+  if (hafalanMode) {
+    toolbar.appendChild(mkBtn('&#x1F441; Intip' + (peekMode ? ' &#x2713;' : ''), togglePeekMode, peekMode, 93, 173, 226));
+  }
+  toolbar.appendChild(mkBtn('&#x1F50E; Shazam Qur\'an', startVoiceSearch, false, 88, 214, 141));
+  toolbar.appendChild(mkBtn('&#x1F4CB; Riwayat', showMistakeLog, false, 231, 76, 60));
+  var juzNum = currentSurah ? getJuzForSurah(currentSurah) : '';
+  toolbar.appendChild(mkBtn('&#x1F4D6; Juz ' + juzNum, showJuzNavigator, false, 201, 162, 39));
+
+  container.parentNode.insertBefore(toolbar, container);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HELPER: showModal + closeAllModals
+// ══════════════════════════════════════════════════════════════════
+function showModal(title, bodyHTML, footerHTML) {
+  closeAllModals();
+  var overlay = document.createElement('div');
+  overlay.className = 'tai-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);' +
+    'backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;';
+
+  var titleHTML = title
+    ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+      '<h3 style="font-size:16px;font-weight:700;color:rgba(245,240,232,0.95);">' + title + '</h3>' +
+      '<div style="display:flex;gap:8px;align-items:center;">' + (footerHTML || '') +
+      '<button onclick="closeAllModals()" style="width:30px;height:30px;border-radius:50%;' +
+      'border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(245,240,232,0.6);' +
+      'cursor:pointer;font-size:16px;line-height:1;">&#x2715;</button>' +
+      '</div></div>'
+    : '';
+
+  overlay.innerHTML = '<div style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);' +
+    'border-radius:20px;padding:28px 24px;width:92%;max-width:480px;max-height:85vh;overflow-y:auto;">' +
+    titleHTML + bodyHTML + '</div>';
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeAllModals();
   });
-
-  const modal = document.createElement('div');
-  modal.id = 'juzNavModal';
-  modal.style.cssText = `
-    position:fixed;inset:0;z-index:99999;
-    background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
-    display:flex;align-items:flex-start;justify-content:center;
-    overflow-y:auto;padding:20px 0;`;
-  modal.innerHTML = `
-    <div style="background:#1E2230;border:1px solid rgba(201,162,39,0.3);
-      border-radius:24px;padding:28px 24px;width:90%;max-width:440px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <div style="font-size:17px;font-weight:700;color:#C9A227;">📖 Navigasi Juz</div>
-        <button onclick="document.getElementById('juzNavModal').remove()"
-          style="background:transparent;border:none;color:rgba(255,255,255,0.4);
-            font-size:20px;cursor:pointer;">×</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
-        ${Object.keys(juzGroups).sort((a,b)=>a-b).map(juz => {
-          const surahs = juzGroups[juz];
-          const first = surahs[0];
-          return `
-          <button onclick="selectSurah(${first.id});document.getElementById('juzNavModal').remove();"
-            style="padding:12px 4px;border-radius:10px;border:1px solid rgba(201,162,39,0.2);
-              background:rgba(201,162,39,0.05);color:var(--cream);font-size:11px;
-              cursor:pointer;font-family:inherit;transition:all 0.2s;"
-            onmouseover="this.style.background='rgba(201,162,39,0.15)'"
-            onmouseout="this.style.background='rgba(201,162,39,0.05)'">
-            <div style="font-size:16px;font-weight:700;color:#C9A227;">Juz ${juz}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:3px;">
-              ${first.name}
-            </div>
-          </button>`;
-        }).join('')}
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
 }
 
-// ══════════════════════════════════════════════════════════════
-// 6. PATCH renderAyat — integrasi mode hafalan
-// ══════════════════════════════════════════════════════════════
-const _renderAyatOrig = renderAyat;
-function renderAyat(surahId) {
-  if (!hafalanMode) {
-    _renderAyatOrig(surahId);
-    renderModeToolbar();
-    return;
+function closeAllModals() {
+  var modals = document.querySelectorAll('.tai-modal-overlay');
+  for (var i = 0; i < modals.length; i++) modals[i].remove();
+}
+
+// ── Tombol Juz di sidebar ──
+(function() {
+  function tryAddJuzBtn() {
+    var sh = document.querySelector('.sidebar-header');
+    if (!sh) { setTimeout(tryAddJuzBtn, 400); return; }
+    if (document.getElementById('btnJuzSidebar')) return;
+    var btn = document.createElement('button');
+    btn.id = 'btnJuzSidebar';
+    btn.onclick = showJuzNavigator;
+    btn.style.cssText = 'width:100%;margin-top:8px;padding:8px 12px;border-radius:10px;' +
+      'border:1px solid rgba(201,162,39,0.25);background:rgba(201,162,39,0.08);' +
+      'color:rgba(201,162,39,0.8);font-size:12px;font-weight:600;cursor:pointer;' +
+      'font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;';
+    btn.innerHTML = '&#x1F4D6; Navigasi Juz';
+    sh.appendChild(btn);
   }
-
-  const ayats = getAyatForSurah(surahId);
-  const container = document.getElementById('ayatContainer');
-  if (!container) return;
-
-  if (!ayats || ayats.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:48px 20px;
-      color:rgba(245,240,232,0.35);">
-      <div style="font-size:36px;margin-bottom:12px;">⏳</div>
-      <div style="font-size:14px;">Memuat ayat...</div>
-    </div>`;
-    fetchAndRenderAyat(surahId);
-    renderModeToolbar();
-    return;
-  }
-
-  container.innerHTML = ayats.map(a => {
-    const html = renderAyatWithHafalanMode(a, surahId);
-    return html || '';
-  }).join('');
-
-  renderModeToolbar();
-}
-
-// ══════════════════════════════════════════════════════════════
-// 7. PATCH analyzeTajwid — tambah logMistake + hafalan tracking
-// ══════════════════════════════════════════════════════════════
-const _analyzeTajwidOrig = analyzeTajwid;
-function analyzeTajwid() {
-  _analyzeTajwidOrig();
-
-  // Setelah analisis, catat kesalahan jika ada
-  setTimeout(() => {
-    const feedbackEl = document.getElementById('feedback-' + currentAyah);
-    if (feedbackEl && feedbackEl.innerHTML.includes('Koreksi Tajwid')) {
-      // Ada kesalahan — cari error type dari feedback
-      const match = feedbackEl.innerHTML.match(/Mad[^<"]*|Ghunnah|Ikhfa|Idgham[^<"]*|Iqlab|Izhar|Qalqalah[^<"]*/);
-      const errorType = match ? match[0] : 'Tajwid';
-
-      // Kata yang salah
-      const wordMatch = feedbackEl.innerHTML.match(/font-family:'Amiri'[^>]+>([^<]+)<\/span>/);
-      const kata = wordMatch ? wordMatch[1].trim() : '';
-
-      logMistake(currentSurah, currentAyah, errorType, kata);
-
-      // Jika mode hafalan: tandai ayat sebagai 'wrong'
-      if (hafalanMode) {
-        hafalanProgress[`${currentSurah}_${currentAyah}`] = 'wrong';
-      }
-    } else if (feedbackEl && feedbackEl.innerHTML.includes('Mashaa Allah')) {
-      // Benar — jika mode hafalan: tandai 'correct'
-      if (hafalanMode) {
-        hafalanProgress[`${currentSurah}_${currentAyah}`] = 'correct';
-        // Simpan ke hafalan log
-        try {
-          const haf = JSON.parse(localStorage.getItem(KEY_HAFALAN)||'{}');
-          const key = `${currentSurah}_${currentAyah}`;
-          if (!haf[key]) haf[key] = { mastered: false, attempts: 0 };
-          haf[key].attempts++;
-          if (haf[key].attempts >= 3) haf[key].mastered = true;
-          haf[key].lastDate = new Date().toISOString();
-          localStorage.setItem(KEY_HAFALAN, JSON.stringify(haf));
-        } catch(e){}
-      }
-    }
-
-    if (hafalanMode) renderAyat(currentSurah);
-  }, 500);
-}
-
-// ══════════════════════════════════════════════════════════════
-// 8. TAMBAH tombol Juz di header surah
-// ══════════════════════════════════════════════════════════════
-const _selectSurahOrig = selectSurah;
-function selectSurah(id) {
-  _selectSurahOrig(id);
-  // Update juz info di header
-  setTimeout(() => {
-    const sub = document.getElementById('surahSub');
-    if (sub) {
-      const s = SURAHS[id - 1];
-      if (s) {
-        const juz = getJuzForSurah(id);
-        sub.innerHTML = `${s.type} · ${s.ayat} Ayat · Juz ${juz}
-          <button onclick="showJuzNavigator()" style="margin-left:8px;font-size:10px;
-            padding:2px 8px;border-radius:6px;background:rgba(201,162,39,0.1);
-            border:1px solid rgba(201,162,39,0.25);color:#C9A227;cursor:pointer;
-            font-family:inherit;">📖 Ganti Juz</button>`;
-      }
-    }
-    renderModeToolbar();
-  }, 100);
-}
+  setTimeout(tryAddJuzBtn, 600);
+})();
 
 
 </script>
