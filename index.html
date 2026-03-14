@@ -3768,6 +3768,8 @@ function showLoginScreen() {
 // Tampilkan app utama setelah login
 function showApp(user) {
   document.getElementById('loginScreen').style.display = 'none';
+  var spaRoot = document.getElementById('spa-root');
+  if (spaRoot) spaRoot.style.display = 'flex';
 
   if (user) {
     // Tampilkan info user di header
