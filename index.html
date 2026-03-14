@@ -1231,66 +1231,6 @@
     header { padding-top: env(safe-area-inset-top, 0px); }
     #bottom-nav { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important; }
   }
-
-/* ══ DARK MODE TOGGLE ══ */
-body.light-mode {
-  --teal-dark: #f0ebe0;
-  --cream: #2c1810;
-  --gold: #8B6F15;
-  background: #f5f0e8 !important;
-}
-body.light-mode .ayat-card {
-  background: rgba(255,255,255,0.85) !important;
-  border-color: rgba(0,0,0,0.08) !important;
-}
-body.light-mode header,
-body.light-mode .sidebar,
-body.light-mode #bottom-nav {
-  background: #ffffff !important;
-  border-color: rgba(0,0,0,0.08) !important;
-}
-body.light-mode .surah-item:hover { background: rgba(0,0,0,0.04) !important; }
-body.light-mode .surah-name { color: #1a1408 !important; }
-body.light-mode .surah-meta { color: #6b5b3e !important; }
-body.light-mode .search-box {
-  background: rgba(0,0,0,0.05) !important;
-  color: #1a1408 !important;
-  border-color: rgba(0,0,0,0.1) !important;
-}
-body.light-mode .ayat-arabic { color: #1a1408 !important; }
-body.light-mode .logo-text { color: #1a1408 !important; }
-
-/* Dark mode button */
-#darkModeBtn {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 20px;
-  padding: 5px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--cream);
-  transition: all 0.2s;
-  font-family: inherit;
-}
-#darkModeBtn:hover { background: rgba(255,255,255,0.12); }
-body.light-mode #darkModeBtn {
-  background: rgba(0,0,0,0.06);
-  border-color: rgba(0,0,0,0.12);
-  color: #1a1408;
-}
-
-
-/* ── MODE TOOLBAR ── */
-#modeToolbar {
-  padding: 10px 20px 0;
-  background: transparent;
-  z-index: 10;
-  position: relative;
-}
-#modeToolbar button {
-  white-space: nowrap;
-}
-
 </style>
 </head>
 <body>
@@ -1558,8 +1498,7 @@ service cloud.firestore {
       <div class="logo-text">Tartil<span class="logo-ai">AI</span></div>
     </div>
     <div class="header-right">
-      <div class="user-score-badge">⭐ <span id="totalScore">0</span><span class="score-text"> Total Skor</span>
-      <button id="darkModeBtn" onclick="toggleDarkMode()" title="Ganti Tema">🌙</button></div>
+      <div class="user-score-badge">⭐ <span id="totalScore">0</span><span class="score-text"> Total Skor</span></div>
       <div id="userInfo" style="display:none;align-items:center;gap:6px;">
         <img id="userAvatar" src="" alt="" style="width:30px;height:30px;border-radius:50%;border:2px solid rgba(201,162,39,0.5);object-fit:cover;">
         <span id="userName" style="font-size:12px;color:rgba(245,240,232,0.8);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
@@ -2203,9 +2142,8 @@ service cloud.firestore {
 
 
 <script>
-/* ════════════════════════════════════════════
-   TARTIL JS (core - rekam, analisis, TTS, surah)
-   ════════════════════════════════════════════ */
+
+/* ═══ TARTIL CORE ═══ */
 
 // ===================================
 // DATA SURAH (114 Surah)
@@ -2581,7 +2519,7 @@ function renderAyat(surahId) {
 
   if (!ayats || ayats.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:48px 20px;color:rgba(245,240,232,0.35);">
+      <div style="text-align:center;padding:48px 20px;color:rgba(253,248,238,0.35);">
         <div style="font-size:36px;margin-bottom:12px;">⏳</div>
         <div style="font-size:14px;">Memuat ayat...</div>
       </div>`;
@@ -2635,11 +2573,9 @@ function renderAyat(surahId) {
         ${coloredAyah}
       </div>
 
-      <!-- Terjemahan disembunyikan - lihat tab Terjemah -->
-
       <!-- Status rekam -->
       <div id="rec-status-${a.id}"
-        style="font-size:11px;color:rgba(245,240,232,0.4);direction:ltr;
+        style="font-size:11px;color:rgba(253,248,238,0.4);direction:ltr;
                margin-top:6px;min-height:14px;"></div>
 
       <!-- Feedback tajwid -->
@@ -2677,7 +2613,7 @@ async function fetchAndRenderAyat(surahId) {
   } catch(e) {
     const cont = document.getElementById('ayatContainer');
     if (cont) cont.innerHTML = `
-      <div style="text-align:center;padding:40px;color:rgba(245,240,232,0.4);">
+      <div style="text-align:center;padding:40px;color:rgba(253,248,238,0.4);">
         <div style="font-size:28px;margin-bottom:8px;">⚠️</div>
         <div style="margin-bottom:16px;">Gagal memuat. Periksa koneksi.</div>
         <button onclick="fetchAndRenderAyat(${surahId})"
@@ -2748,8 +2684,7 @@ function init() {
   renderQoriList();
   renderTajwidGuide();
   selectSurah(1);
-  // Render toolbar setelah semua siap
-  setTimeout(renderModeToolbar, 300);
+  setTimeout(renderModeToolbar, 400);
 }
 
 // Render seluruh kata dalam satu ayat dengan warna tajwid
@@ -2784,163 +2719,66 @@ const QORI_LIST = [
 // Tajwid errors — desc: teks tampilan, tts: teks khusus TTS fonetik Indonesia
 const TAJWID_ERRORS = [
   {
-    type:"Mad Tabi'i",
-    arabicName:"مَدٌّ طَبِيعِيٌّ",
-    huruf:"و / ي / ا",
-    rule:"Panjang 2 harakat (2 ketukan), tidak boleh lebih tidak boleh kurang.",
-    contoh:"رَحِيمِ → ra-HII-mi (ii = 2 ketukan)",
-    salah:"Terlalu pendek atau terlalu panjang",
-    cara:"Tahan selama 2 ketukan pada huruf waw, ya, atau alif yang berbaris.",
-    desc:"Mad Tabi'i — panjang tepat 2 harakat. Contoh: رَحِيمِ → tahan 'ii' selama 2 ketukan.",
-    tts:"Perhatikan bacaan Mad Thabi i. Huruf mad pada kata ini harus ditahan tepat dua ketukan, tidak boleh satu ketukan dan tidak boleh tiga ketukan. Contohnya seperti kata Rohiim, tahan bunyi ii selama dua ketukan.",
+    type:"Mad",
+    desc:"Panjang Mad kurang dari 2 harakat. Harus dipanjangkan minimal 2 ketukan.",
+    tts:"Perhatikan bacaan Maad. Haruf waw, ya, atau alif harus dipanjangkan minimal dua ketukan.",
     severity:"medium"
   },
   {
-    type:"Mad Wajib Muttasil",
-    arabicName:"مَدٌّ وَاجِبٌ مُتَّصِلٌ",
-    huruf:"مد + همزة (satu kata)",
-    rule:"Wajib panjang 4-5 harakat. Hamzah setelah huruf mad dalam satu kata.",
-    contoh:"جَآءَ → jaa-A (4-5 ketukan)",
-    salah:"Dibaca pendek seperti Mad Tabi'i",
-    cara:"Tahan huruf mad selama 4-5 ketukan karena ada hamzah setelahnya.",
-    desc:"Mad Wajib Muttasil — wajib 4-5 harakat. Hamzah setelah mad dalam satu kata.",
-    tts:"Perhatikan bacaan Mad Wajib Muttasil. Karena ada hamzah setelah huruf mad dalam satu kata, bacaannya harus dipanjangkan empat hingga lima ketukan, lebih panjang dari mad biasa.",
-    severity:"high"
-  },
-  {
-    type:"Mad Jaiz Munfasil",
-    arabicName:"مَدٌّ جَائِزٌ مُنْفَصِلٌ",
-    huruf:"مد + همزة (beda kata)",
-    rule:"Boleh 2, 4, atau 5 harakat. Hamzah di kata berikutnya.",
-    contoh:"إِنَّآ أَعْطَيْنَٰكَ → maa-A (2-5 ketukan)",
-    salah:"Dibaca terlalu singkat",
-    cara:"Boleh dibaca 2, 4, atau 5 ketukan — pilih dan konsistenlah.",
-    desc:"Mad Jaiz Munfasil — boleh 2, 4, atau 5 harakat. Hamzah di kata berbeda.",
-    tts:"Perhatikan bacaan Mad Jaiz Munfasil. Huruf mad ini diikuti hamzah di kata yang berbeda, sehingga boleh dibaca dua, empat, atau lima ketukan. Pilih salah satu dan konsisten.",
-    severity:"medium"
-  },
-  {
-    type:"Mad 'Aridh Lissukun",
-    arabicName:"مَدٌّ عَارِضٌ لِلسُّكُوْنِ",
-    huruf:"مد + سكون waqaf",
-    rule:"Saat waqaf: 2, 4, atau 6 harakat. Saat washal: 2 harakat.",
-    contoh:"نَسْتَعِينُ (waqaf) → niiin (2-6 ketukan)",
-    salah:"Waqaf dibaca pendek seperti washal",
-    cara:"Saat berhenti (waqaf), panjangkan huruf mad 2, 4, atau 6 ketukan.",
-    desc:"Mad 'Aridh — saat waqaf panjang 2, 4, atau 6 harakat.",
-    tts:"Perhatikan bacaan Mad Aaridh Lissukun. Saat waqaf atau berhenti di akhir ayat, huruf mad harus dipanjangkan dua, empat, atau enam ketukan. Jangan dibaca pendek saat waqaf.",
-    severity:"medium"
+    type:"Qalqalah",
+    desc:"Pantulkan huruf Qalqalah lebih jelas saat waqaf.",
+    tts:"Perhatikan bacaan Qalqalah. Huruf qaf, tho, ba, jim, atau dal harus dipantulkan dengan jelas.",
+    severity:"low"
   },
   {
     type:"Ghunnah",
-    arabicName:"غُنَّة",
-    huruf:"ن مشددة / م مشددة",
-    rule:"Dengung 2 harakat pada nun atau mim bertasydid.",
-    contoh:"إِنَّ → in-nna (dengung 2 ketukan)",
-    salah:"Dengung terlalu singkat atau tidak ada",
-    cara:"Tekan nun/mim bertasydid dan tahan dengung di hidung selama 2 ketukan.",
-    desc:"Ghunnah — dengung 2 harakat pada ن atau م bertasydid.",
-    tts:"Perhatikan bacaan Ghunnah. Huruf nun atau mim yang bertasydid harus didengungkan melalui hidung selama dua ketukan. Rasakan getaran di hidung saat mengucapkannya.",
+    desc:"Dengung Ghunnah kurang pada huruf Nun bertasydid. Harus 2 harakat.",
+    tts:"Perhatikan bacaan Ghunnah. Huruf nun atau mim bertasydid harus didengungkan selama dua harakat.",
     severity:"high"
   },
   {
     type:"Ikhfa",
-    arabicName:"إِخْفَاء",
-    huruf:"ن sukun/tanwin + 15 huruf ikhfa",
-    rule:"Samarkan nun — antara izhar dan idgham, dengung 2 harakat.",
-    contoh:"مِنْ ثَمَرَةٍ → min..tsamarah (samar 2 ketukan)",
-    salah:"Terlalu jelas (seperti izhar) atau terlalu lebur (seperti idgham)",
-    cara:"Ucapkan nun samar-samar sambil dengung 2 ketukan, lidah tidak menyentuh sempurna.",
-    desc:"Ikhfa — nun sukun/tanwin disamarkan + dengung 2 harakat sebelum 15 huruf.",
-    tts:"Perhatikan bacaan Ikhfa. Nun sukun atau tanwin sebelum huruf ikhfa harus disamarkan, bukan dibaca jelas dan bukan dilebur. Tahan dengung di hidung selama dua ketukan dengan posisi lidah tidak menyentuh sempurna.",
+    desc:"Nun sukun tidak disamarkan dengan benar sebelum huruf Ikhfa.",
+    tts:"Perhatikan bacaan Ikh fa. Nun sukun atau tanwin harus disamarkan, tidak boleh terlalu jelas dan tidak boleh terlalu lebur.",
     severity:"medium"
   },
   {
-    type:"Idgham Bighunnah",
-    arabicName:"إِدْغَامٌ بِغُنَّةٍ",
-    huruf:"ن sukun/tanwin + ي ن م و",
-    rule:"Lebur nun ke huruf berikutnya + dengung 2 harakat.",
-    contoh:"مِنْ وَرَاءِ → miw-waraa (lebur + dengung)",
-    salah:"Nun masih terdengar jelas",
-    cara:"Hilangkan bunyi nun sepenuhnya, gantikan dengan dengung 2 ketukan ke huruf berikutnya.",
-    desc:"Idgham Bighunnah — nun lebur ke ي ن م و dengan dengung 2 harakat.",
-    tts:"Perhatikan bacaan Idgham Bighunnah. Nun sukun atau tanwin harus dilebur sepenuhnya ke dalam huruf berikutnya disertai dengung dua ketukan. Bunyi nun tidak boleh terdengar sama sekali.",
+    type:"Idgham",
+    desc:"Nun sukun seharusnya dilebur ke huruf berikutnya (Idgham).",
+    tts:"Perhatikan bacaan Id gham. Nun sukun atau tanwin harus dimasukkan ke dalam huruf berikutnya hingga menjadi satu.",
     severity:"high"
   },
   {
-    type:"Idgham Bilaghunnah",
-    arabicName:"إِدْغَامٌ بِلَا غُنَّةٍ",
-    huruf:"ن sukun/tanwin + ل ر",
-    rule:"Lebur nun ke huruf berikutnya TANPA dengung.",
-    contoh:"مِنْ رَّبِّهِمْ → mir-rabbihim (lebur tanpa dengung)",
-    salah:"Ada dengung atau nun terdengar",
-    cara:"Hilangkan nun sepenuhnya, langsung ucapkan huruf berikutnya tanpa dengung.",
-    desc:"Idgham Bilaghunnah — nun lebur ke ل ر tanpa dengung.",
-    tts:"Perhatikan bacaan Idgham Bilaghunnah. Nun sukun atau tanwin di depan huruf lam atau ra harus dilebur tanpa dengung. Langsung ucapkan huruf berikutnya dengan tegas.",
+    type:"Makharijul Huruf",
+    desc:"Makhraj huruf ض belum tepat, keluar dari sisi lidah kanan/kiri.",
+    tts:"Perhatikan makhraj huruf. Tempat keluarnya huruf belum tepat. Pastikan posisi lidah, bibir, dan tenggorokan sudah benar.",
     severity:"medium"
+  },
+  {
+    type:"Mad Tabi'i",
+    desc:"Mad Tabi'i — panjang 2 harakat, jangan lebih jangan kurang.",
+    tts:"Perhatikan bacaan Maad Thabi i. Panjang bacaannya tepat dua harakat, tidak boleh lebih dan tidak boleh kurang.",
+    severity:"medium"
+  },
+  {
+    type:"Mad 'Arid",
+    desc:"Mad 'Arid Lissukun — panjang 2, 4, atau 6 harakat saat waqaf.",
+    tts:"Perhatikan bacaan Maad Aaridh. Saat waqaf, haruf mad boleh dipanjangkan dua, empat, atau enam harakat.",
+    severity:"medium"
+  },
+  {
+    type:"Izhar",
+    desc:"Nun sukun dibaca jelas (Izhar), jangan didengungkan.",
+    tts:"Perhatikan bacaan Idz har. Nun sukun atau tanwin harus dibaca dengan jelas dan terang, tanpa dengung.",
+    severity:"low"
   },
   {
     type:"Iqlab",
-    arabicName:"إِقْلَابٌ",
-    huruf:"ن sukun/tanwin + ب",
-    rule:"Nun berubah menjadi mim samar + dengung 2 harakat.",
-    contoh:"أَنْبِيَاءَ → am-biyaa (nun jadi mim)",
-    salah:"Nun dibaca tetap sebagai nun",
-    cara:"Ubah bunyi nun menjadi mim, tahan dengung 2 ketukan sebelum huruf ba.",
-    desc:"Iqlab — nun sukun/tanwin berubah jadi mim + dengung sebelum huruf ب.",
-    tts:"Perhatikan bacaan Iqlab. Nun sukun atau tanwin di depan huruf ba harus diubah menjadi mim dengan dengung dua ketukan. Jangan dibaca nun, melainkan berubah menjadi bunyi mim samar.",
-    severity:"medium"
-  },
-  {
-    type:"Izhar Halqi",
-    arabicName:"إِظْهَارٌ حَلْقِيٌّ",
-    huruf:"ن sukun/tanwin + ء ه ع ح غ خ",
-    rule:"Baca nun dengan jelas dan terang, tanpa dengung sama sekali.",
-    contoh:"مَنْ آمَنَ → man-aamana (nun jelas)",
-    salah:"Ada dengung pada nun",
-    cara:"Ucapkan nun dengan jelas sepenuhnya, hentikan dengung, lalu lanjut ke huruf berikutnya.",
-    desc:"Izhar Halqi — nun sukun/tanwin dibaca jelas tanpa dengung sebelum 6 huruf halqi.",
-    tts:"Perhatikan bacaan Izhar Halqi. Nun sukun atau tanwin di depan huruf tenggorokan harus dibaca dengan jelas dan terang. Tidak boleh ada dengung sama sekali. Ucapkan nun secara sempurna lalu lanjutkan.",
-    severity:"low"
-  },
-  {
-    type:"Qalqalah Sughra",
-    arabicName:"قَلْقَلَةٌ صُغْرَى",
-    huruf:"ق ط ب ج د (sukun di tengah)",
-    rule:"Pantulan kecil saat huruf qalqalah sukun di tengah kata.",
-    contoh:"يَقْطَعُونَ → yaq-tha (pantulan kecil pada qaf)",
-    salah:"Tidak ada pantulan atau dibaca datar",
-    cara:"Beri pantulan kecil saat huruf qalqalah bersukun, seperti memantul ringan.",
-    desc:"Qalqalah Sughra — pantulan kecil pada ق ط ب ج د sukun di tengah kata.",
-    tts:"Perhatikan bacaan Qalqalah Sughra. Huruf qaf, tha, ba, jim, atau dal yang bersukun di tengah kata harus dipantulkan dengan pantulan kecil. Rasakan bunyi memantul ringan saat mengucapkannya.",
-    severity:"low"
-  },
-  {
-    type:"Qalqalah Kubra",
-    arabicName:"قَلْقَلَةٌ كُبْرَى",
-    huruf:"ق ط ب ج د (waqaf di akhir)",
-    rule:"Pantulan besar saat waqaf pada huruf qalqalah.",
-    contoh:"وَٱلْفَجْرِ (waqaf) → fajr + pantulan kuat",
-    salah:"Waqaf tanpa pantulan atau pantulan terlalu lemah",
-    cara:"Saat waqaf pada huruf qalqalah, beri pantulan yang kuat dan jelas.",
-    desc:"Qalqalah Kubra — pantulan kuat saat waqaf pada ق ط ب ج د.",
-    tts:"Perhatikan bacaan Qalqalah Kubra. Saat berhenti atau waqaf pada huruf qalqalah, pantulkan dengan kuat dan jelas. Lebih kuat dari qalqalah sughra, seperti bunyi yang memantul tegas.",
-    severity:"medium"
-  },
-  {
-    type:"Makharijul Huruf",
-    arabicName:"مَخَارِجُ الْحُرُوفِ",
-    huruf:"—",
-    rule:"Setiap huruf harus keluar dari tempat yang benar.",
-    contoh:"ض keluar dari sisi lidah kanan/kiri",
-    salah:"Huruf tidak keluar dari makhrajnya yang tepat",
-    cara:"Perhatikan posisi lidah, bibir, gigi, dan tenggorokan sesuai makhraj huruf.",
-    desc:"Makhraj huruf belum tepat — pastikan posisi lidah, bibir, dan tenggorokan benar.",
-    tts:"Perhatikan makhraj huruf. Tempat keluarnya huruf belum tepat. Setiap huruf Arab memiliki titik keluarnya masing-masing. Pastikan posisi lidah, bibir, gigi, dan tenggorokan sudah sesuai.",
+    desc:"Nun sukun berubah menjadi mim sebelum huruf Ba (Iqlab).",
+    tts:"Perhatikan bacaan Iq lab. Nun sukun atau tanwin di depan huruf ba harus berubah menjadi mim dengan dengung.",
     severity:"medium"
   },
 ];
-
 
 // ===================================
 // STATE
@@ -3091,7 +2929,6 @@ function _stopAnalyseLoop() {
 
 // ─── START RECORDING ─────────────────────────────────────────────────
 async function startRecordingForAyah(ayahId) {
-  _unlockTTS(); if (!_idVoice) _initVoice();
   currentAyah   = ayahId;
   isRecording   = true;
   recElapsed    = 0;
@@ -3225,154 +3062,78 @@ function stopRecording() {
   _setRecText('Menganalisis bacaan...', '');
   _resetWaveBars();
 
-  // Analisis langsung
-  analyzeTajwid();
+  // Delay lalu analisis
+  setTimeout(() => analyzeTajwid(), 1200);
 }
-
-// alias — recBtn di header tartil
-function toggleRecording() {
-  if (window.isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-}
-
 
 function analyzeTajwid() {
   const ayats = getAyatForSurah(currentSurah);
-  const ayat  = ayats.find(a => a.id === currentAyah);
-  if (!ayat) {
-    const rt = document.getElementById('recText');
-    if (rt) rt.textContent = 'Tap ayat untuk memilih, lalu rekam';
-    return;
-  }
-
-  const wordCount = (ayat.words || ayat.arabic.split(' ')).length;
-  const base  = wordCount<=3 ? 72 : wordCount<=7 ? 68 : 60;
-  const score = Math.min(100, base + Math.floor(Math.random()*32));
+  const ayat = ayats.find(a => a.id === currentAyah);
+  if(!ayat) return;
+  
+  // Simulate: random score 60-100
+  const score = Math.floor(Math.random() * 40) + 60;
   const hasErrors = score < 85;
-
-  const card = document.getElementById('card-' + currentAyah);
-  if (card) {
-    card.classList.remove('reading','graded-good','graded-ok','graded-bad');
-    card.classList.add(score>=85 ? 'graded-good' : score>=65 ? 'graded-ok' : 'graded-bad');
-  }
-
-  const feedbackEl = document.getElementById('feedback-' + currentAyah);
-
-  if (hasErrors) {
-    // Pilih error berdasarkan tag tajwid ayat
-    const tags  = (ayat.tajwid && ayat.tajwid.length) ? ayat.tajwid : ['mad'];
-    const matched = tags
-      .map(t => TAJWID_ERRORS.find(e => e.type.toLowerCase().replace(/[^a-z]/g,'').includes(t.toLowerCase().replace(/[^a-z]/g,''))))
-      .filter(Boolean);
-    const errList = matched.length ? matched.slice(0,2) : [TAJWID_ERRORS[Math.floor(Math.random()*TAJWID_ERRORS.length)]];
-    const err = errList[0];
-
-    // Pilih kata yang diduga salah (kata terakhir atau kata dengan tag tajwid)
-    const words = ayat.words || ayat.arabic.split(' ');
-    const salahIdx = Math.floor(words.length * 0.6); // fokus di bagian akhir
-    const kataSalah = words[salahIdx] || words[words.length-1];
-
-    // ── HTML feedback detail ──
-    const htmlFeedback = `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:18px;">⚠️</span>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#E67E22;">Koreksi Tajwid — Skor ${score}/100</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Perhatikan poin berikut dan rekam ulang</div>
-        </div>
-      </div>
-      ${errList.map((e,i) => `
-      <div style="background:rgba(230,126,34,0.08);border:1px solid rgba(230,126,34,0.25);border-radius:10px;padding:12px;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="background:rgba(230,126,34,0.2);color:#E67E22;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${e.type}</span>
-          <span style="font-family:'Amiri',serif;font-size:16px;color:#C9A227;direction:rtl;">${e.arabicName||''}</span>
-        </div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-bottom:4px;">
-          <strong style="color:#fff;">📌 Kata yang perlu diperhatikan:</strong>
-          <span style="font-family:'Amiri',serif;font-size:17px;color:#C9A227;direction:rtl;margin:0 6px;">${i===0 ? kataSalah : (words[0]||'')}</span>
-        </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px;">
-          📏 <strong style="color:#fff;">Aturan:</strong> ${e.rule}
-        </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px;">
-          💡 <strong style="color:#fff;">Contoh:</strong> <span style="font-style:italic;">${e.contoh}</span>
-        </div>
-        <div style="font-size:12px;color:#3ECF8E;">
-          ✅ <strong>Cara benar:</strong> ${e.cara}
-        </div>
-      </div>`).join('')}
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;margin-top:4px;">
-        Tap tombol 🎙 untuk rekam ulang ayat ini
-      </div>`;
-
-    if (feedbackEl) {
-      feedbackEl.innerHTML = htmlFeedback;
-      feedbackEl.classList.add('show');
-      feedbackEl.style.background = 'rgba(13,35,35,0.95)';
-      feedbackEl.style.borderColor = 'rgba(230,126,34,0.4)';
-      feedbackEl.style.borderWidth = '1px';
-      feedbackEl.style.borderStyle = 'solid';
-      feedbackEl.style.borderRadius = '12px';
-      feedbackEl.style.padding = '14px';
-      feedbackEl.style.color = '';
-    }
-
-    // Toast singkat
-    showToast('⚠️', err.type, err.rule, 'error');
-
-    // TTS detail - sebutkan kata, hukum, dan cara
-    const ttsText = `Skor Anda ${score} dari seratus. ` + err.tts +
-      ` Kata yang perlu diperbaiki: ${kataSalah}. Rekam ulang ayat ini.`;
-    speakFeedback({tts: ttsText});
-
+  
+  // Update ayat card
+  const card = document.getElementById(`ayat-card-${currentAyah}`);
+  card.classList.remove('reading','graded-good','graded-ok','graded-bad');
+  if(score >= 85) card.classList.add('graded-good');
+  else if(score >= 65) card.classList.add('graded-ok');
+  else card.classList.add('graded-bad');
+  
+  // Show feedback
+  if(hasErrors) {
+    const errors = ayat.tajwid.map(t => TAJWID_ERRORS.find(e => e.type.toLowerCase().includes(t)) || TAJWID_ERRORS[0]).slice(0,2);
+    const feedbackEl = document.getElementById(`feedback-${currentAyah}`);
+    feedbackEl.innerHTML = `<strong>⚠️ Koreksi Tajwid:</strong> ${errors.map(e => `<span class="tajwid-tag">${e.type}</span> ${e.desc}`).join(' · ')}`;
+    feedbackEl.classList.add('show');
+    
+    // Toast
+    showToast('⚠️', 'Perlu Diperbaiki', errors[0].desc, 'error');
+    
+    // TTS feedback — kirim objek agar fungsi bisa pakai field .tts
+    speakFeedback(errors[0]);
   } else {
-    // Bacaan benar
-    const htmlSuccess = `
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span style="font-size:24px;">✅</span>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:#3ECF8E;">Mashaa Allah! Bacaan sudah tepat</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">Skor ${score}/100 — Tajwid pada ayat ini sudah benar</div>
-        </div>
-      </div>`;
-
-    if (feedbackEl) {
-      feedbackEl.innerHTML = htmlSuccess;
-      feedbackEl.classList.add('show');
-      feedbackEl.style.background = 'rgba(39,174,96,0.08)';
-      feedbackEl.style.borderColor = 'rgba(39,174,96,0.3)';
-      feedbackEl.style.borderWidth = '1px';
-      feedbackEl.style.borderStyle = 'solid';
-      feedbackEl.style.borderRadius = '12px';
-      feedbackEl.style.padding = '14px';
-      feedbackEl.style.color = '#58D68D';
-    }
-    showToast('✅', 'Bacaan Benar!', `Skor ${score}/100 — Tajwid sudah tepat!`, 'success');
-    speakFeedback({tts: `Mashaa Allah. Skor Anda ${score} dari seratus. Bacaan tajwid pada ayat ini sudah benar. Silakan lanjutkan ke ayat berikutnya.`});
+    const feedbackEl = document.getElementById(`feedback-${currentAyah}`);
+    feedbackEl.innerHTML = `<strong style="color: #58D68D">✅ Bagus!</strong> Bacaan tajwid pada ayat ini sudah benar.`;
+    feedbackEl.classList.add('show');
+    feedbackEl.style.background = 'rgba(39,174,96,0.1)';
+    feedbackEl.style.borderColor = 'rgba(39,174,96,0.3)';
+    feedbackEl.style.color = '#58D68D';
+    
+    showToast('✅', 'Bacaan Benar!', 'Tajwid ayat ini sudah tepat. Lanjutkan ke ayat berikutnya!', 'success');
+  }
+  
+  // Save score for ayat
+  if(!scores[`${currentSurah}_${currentAyah}`]) {
+    scores[`${currentSurah}_${currentAyah}`] = score;
+  } else {
+    scores[`${currentSurah}_${currentAyah}`] = Math.max(scores[`${currentSurah}_${currentAyah}`], score);
   }
 
-  // Simpan skor
-  const key = currentSurah + '_' + currentAyah;
-  scores[key] = scores[key] ? Math.max(scores[key], score) : score;
+  // ── Track activity for Dashboard ──
   try {
     const today = new Date();
-    const dk = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-    const act = JSON.parse(localStorage.getItem('tai_activity')||'{}');
+    const dk = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const act = JSON.parse(localStorage.getItem('tai_activity') || '{}');
     if (!act[dk]) act[dk] = {};
-    act[dk].ayat = (act[dk].ayat||0) + 1;
+    act[dk].ayat = (act[dk].ayat || 0) + 1;
     localStorage.setItem('tai_activity', JSON.stringify(act));
   } catch(e) {}
+  
+  // Update surah score
   updateSurahScore();
-  if (typeof renderSurahList === 'function') renderSurahList();
-  const rt = document.getElementById('recText');
-  if (rt) rt.textContent = 'Skor ayat ' + currentAyah + ': ' + score + '/100';
-  const statusEl = document.getElementById('rec-status-' + currentAyah);
-  if (statusEl) {
-    const col = score>=85 ? '#58D68D' : score>=65 ? '#E67E22' : '#E74C3C';
-    statusEl.innerHTML = '<span style="color:'+col+';font-weight:700;">Skor: '+score+'/100</span> — tap untuk rekam ulang';
+  
+  document.getElementById('recText').textContent = `Skor ayat ${currentAyah}: ${score}/100 — rekam lagi atau pilih ayat lain`;
+
+  // Update status label on ayat card
+  const status = document.getElementById(`rec-status-${currentAyah}`);
+  if(status) {
+    const sc = score;
+    const col = sc>=85?'#58D68D':sc>=65?'#E67E22':'#E74C3C';
+    status.innerHTML = `<span style="color:${col}; font-weight:700;">Skor: ${sc}/100</span> — tap untuk rekam ulang`;
+    status.style.color = col;
   }
 }
 
@@ -3466,70 +3227,52 @@ function ttsPreprocess(text) {
   return t;
 }
 
-// ═══════════════════════════════════════════════════════
-// TTS — kompatibel Android Chrome & iOS Safari
-// ═══════════════════════════════════════════════════════
-const synth = (typeof window !== 'undefined' && window.speechSynthesis) || null;
-let _idVoice     = null;
-let _ttsUnlocked = false;
+// ─── Cache suara Indonesia ───
+let _idVoice = null;
 
 function _initVoice() {
-  if (!synth) return;
-  const voices = synth.getVoices();
-  if (!voices || voices.length === 0) return;
-  _idVoice = voices.find(v => v.lang === 'id-ID')
-          || voices.find(v => v.lang.startsWith('id'))
-          || voices.find(v => v.lang.startsWith('ms'))
-          || voices.find(v => v.lang === 'en-US')
-          || voices[0] || null;
-}
-if (synth) {
-  _initVoice();
-  synth.onvoiceschanged = _initVoice;
-  if (typeof synth.addEventListener === 'function') {
-    synth.addEventListener('voiceschanged', _initVoice);
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    _idVoice = voices.find(v => v.lang === 'id-ID')
+            || voices.find(v => v.lang.startsWith('id'))
+            || voices.find(v => v.lang.startsWith('ms')) // Malay fallback
+            || null;
   }
 }
-function _unlockTTS() {
-  if (!synth || _ttsUnlocked) return;
-  _ttsUnlocked = true;
-  try { const d = new SpeechSynthesisUtterance(''); d.volume=0; synth.speak(d); } catch(e){}
+// Android Chrome: voices baru tersedia setelah event voiceschanged
+if (window.speechSynthesis) {
+  _initVoice(); // coba langsung
+  window.speechSynthesis.onvoiceschanged = _initVoice; // fallback async
 }
-document.addEventListener('touchstart', _unlockTTS, {once:true, passive:true});
-document.addEventListener('click', _unlockTTS, {once:true});
-
 
 function speakFeedback(textOrObj) {
   if (!synth) return;
-  const raw  = (typeof textOrObj==='object' && textOrObj && textOrObj.tts) ? textOrObj.tts : String(textOrObj||'');
-  if (!raw.trim()) return;
-  const text = ttsPreprocess(raw);
-  if (!_idVoice) _initVoice();
-  if (!_ttsUnlocked) _unlockTTS();
+  // Ambil teks
+  const raw       = (typeof textOrObj === 'object' && textOrObj.tts)
+                    ? textOrObj.tts : String(textOrObj);
+  const processed = ttsPreprocess(raw);
 
-  function doSpeak() {
-    if (!synth) return;
-    try { synth.cancel(); } catch(e){}
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang='id-ID'; utter.rate=0.88; utter.pitch=1.0; utter.volume=1.0;
+  // cancel() lalu speak() terlalu cepat di Android → pakai delay 150ms
+  synth.cancel();
+  setTimeout(() => {
+    const utter    = new SpeechSynthesisUtterance(processed);
+    utter.lang     = 'id-ID';
+    utter.rate     = 0.88;
+    utter.pitch    = 1;
+    utter.volume   = 1;
+
+    // Gunakan cache suara; coba init ulang jika masih kosong
+    if (!_idVoice) _initVoice();
     if (_idVoice) utter.voice = _idVoice;
-    let attempts = 0;
-    function trySpeak() {
-      attempts++;
-      if (synth.speaking || synth.pending) {
-        if (attempts < 10) setTimeout(trySpeak, 80);
-        return;
-      }
-      try { synth.speak(utter); } catch(e){ console.warn('TTS:', e); }
-    }
-    setTimeout(trySpeak, 120);
-  }
 
-  if (_audioCtx) {
-    _audioCtx.close().then(()=>{ _audioCtx=null; _analyser=null; setTimeout(doSpeak,80); }).catch(()=>{ _audioCtx=null; setTimeout(doSpeak,80); });
-  } else {
-    doSpeak();
-  }
+    // Fallback: jika synth sedang busy (Android bug), tunggu lagi
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+      setTimeout(() => synth.speak(utter), 200);
+    } else {
+      synth.speak(utter);
+    }
+  }, 150);
 }
 
 // ===================================
@@ -3729,7 +3472,7 @@ function renderTajwidGuide() {
           ${getTajwidTip(key).slice(0,30)}…
         </span>
       </div>
-      <p style="font-size:13px; color:rgba(245,240,232,0.75); line-height:1.7; margin:0;">${rule.desc}</p>
+      <p style="font-size:13px; color:rgba(253,248,238,0.75); line-height:1.7; margin:0;">${rule.desc}</p>
     </div>
   `).join('');
 }
@@ -3748,15 +3491,15 @@ function renderScoreTab() {
   container.innerHTML = `
     <div style="text-align:center; padding: 20px 0 28px; border-bottom: 1px solid rgba(201,162,39,0.1); margin-bottom: 20px;">
       <div style="font-size:64px; font-weight:700; color:var(--gold); line-height:1;">${total || '—'}</div>
-      <div style="font-size:13px; color:rgba(245,240,232,0.5); margin-top:4px;">Rata-rata Skor Keseluruhan</div>
+      <div style="font-size:13px; color:rgba(253,248,238,0.5); margin-top:4px;">Rata-rata Skor Keseluruhan</div>
       <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
-        <span style="padding:4px 12px; background:rgba(39,174,96,0.1); border:1px solid rgba(39,174,96,0.3); border-radius:20px; font-size:12px; color:#3ECF8E;">✓ ${surahsWithScores.filter(s=>scores[s.id]>=85).length} Surah Bagus</span>
+        <span style="padding:4px 12px; background:rgba(39,174,96,0.1); border:1px solid rgba(39,174,96,0.3); border-radius:20px; font-size:12px; color:#58D68D;">✓ ${surahsWithScores.filter(s=>scores[s.id]>=85).length} Surah Bagus</span>
         <span style="padding:4px 12px; background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.3); border-radius:20px; font-size:12px; color:#E67E22;">⚠ ${surahsWithScores.filter(s=>scores[s.id]>=65&&scores[s.id]<85).length} Perlu Latihan</span>
-        <span style="padding:4px 12px; background:rgba(192,57,43,0.1); border:1px solid rgba(192,57,43,0.3); border-radius:20px; font-size:12px; color:#F56565;">✗ ${surahsWithScores.filter(s=>scores[s.id]<65).length} Perlu Perhatian</span>
+        <span style="padding:4px 12px; background:rgba(192,57,43,0.1); border:1px solid rgba(192,57,43,0.3); border-radius:20px; font-size:12px; color:#E74C3C;">✗ ${surahsWithScores.filter(s=>scores[s.id]<65).length} Perlu Perhatian</span>
       </div>
     </div>
     ${surahsWithScores.length > 0 ? `
-      <div style="margin-bottom:12px; font-size:13px; font-weight:600; color:rgba(245,240,232,0.5); text-transform:uppercase; letter-spacing:1px;">Skor per Surah</div>
+      <div style="margin-bottom:12px; font-size:13px; font-weight:600; color:rgba(253,248,238,0.5); text-transform:uppercase; letter-spacing:1px;">Skor per Surah</div>
       ${surahsWithScores.map(s => {
         const sc = scores[s.id];
         const color = sc>=85?'#58D68D':sc>=65?'#E67E22':'#E74C3C';
@@ -3764,14 +3507,14 @@ function renderScoreTab() {
         <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
           <span style="color:var(--gold); font-size:12px; min-width:24px;">${s.id}.</span>
           <span style="color:var(--cream); font-size:13px; flex:1;">${s.name}</span>
-          <span style="font-family:'Amiri',serif; font-size:16px; color:rgba(245,240,232,0.5); direction:rtl;">${s.arabic}</span>
+          <span style="font-family:'Amiri',serif; font-size:16px; color:rgba(253,248,238,0.5); direction:rtl;">${s.arabic}</span>
           <div style="width:80px; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;">
             <div style="width:${sc}%; height:100%; background:${color}; border-radius:3px;"></div>
           </div>
           <span style="font-size:14px; font-weight:700; color:${color}; min-width:36px; text-align:right;">${sc}</span>
         </div>`;
       }).join('')}
-    ` : `<div style="text-align:center; padding:40px; color:rgba(245,240,232,0.35);">
+    ` : `<div style="text-align:center; padding:40px; color:rgba(253,248,238,0.35);">
       <div style="font-size:48px; margin-bottom:12px;">📖</div>
       <div>Mulai latihan tartil untuk melihat skor Anda di sini</div>
     </div>`}
@@ -3785,12 +3528,12 @@ function switchTab(tabId, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   if(el) el.classList.add('active');
-  const content = document.getElementById('tab-' + tabId);
+  const content = document.getElementById(`tab-${tabId}`);
   if(content) content.classList.add('active');
-  // Render terjemah saat tab terjemah dibuka
-  if (tabId === 'terjemah') renderTerjemahTab();
-  // Render toolbar saat tab baca aktif
-  if (tabId === 'baca') setTimeout(renderModeToolbar, 60);
+  if(tabId === 'skor') renderScoreTab();
+  if(tabId === 'terjemah') renderTerjemahTab();
+  if(tabId === 'baca') setTimeout(renderModeToolbar, 60);
+  if(tabId === 'dengar') renderAyatDengar(currentSurah);
 }
 
 // ===================================
@@ -3804,8 +3547,8 @@ function wordTapRule(word, ruleKey, ayahId = null) {
     if (target) {
       target.innerHTML = `<div style="margin-top:10px;padding:10px 12px;border-radius:12px;
         border:1px solid rgba(253,248,238,0.18); background:rgba(253,248,238,0.06);">
-        <div style="font-weight:800;color:rgba(245,240,232,0.85);font-size:13px;">Tidak terdeteksi</div>
-        <div style="font-size:12px;color:rgba(245,240,232,0.7);line-height:1.6;margin-top:4px;">
+        <div style="font-weight:800;color:rgba(253,248,238,0.85);font-size:13px;">Tidak terdeteksi</div>
+        <div style="font-size:12px;color:rgba(253,248,238,0.7);line-height:1.6;margin-top:4px;">
           Kata <b>${word}</b>: tidak ada hukum tajwid khusus terdeteksi pada kata ini.
         </div>
       </div>`;
@@ -3822,7 +3565,7 @@ function wordTapRule(word, ruleKey, ayahId = null) {
       <div style="margin-top:10px;padding:10px 12px;border-radius:12px;
         border:1px solid ${r.border}; background:${r.bg};">
         <div style="font-weight:900;color:${r.color};font-size:13px;">${r.name}</div>
-        <div style="font-size:12px;color:rgba(245,240,232,0.85);line-height:1.6;margin-top:4px;">${r.desc}</div>
+        <div style="font-size:12px;color:rgba(253,248,238,0.85);line-height:1.6;margin-top:4px;">${r.desc}</div>
       </div>`;
   }
 
@@ -3860,16 +3603,16 @@ function showTajwidPopup(word, rule) {
       </div>
       <div>
         <div style="font-size:15px; font-weight:700; color:${rule.color};">${rule.name}</div>
-        <div style="font-size:11px; color:rgba(245,240,232,0.5);">Hukum Tajwid</div>
+        <div style="font-size:11px; color:rgba(253,248,238,0.5);">Hukum Tajwid</div>
       </div>
       <button onclick="closeTajwidPopup()" style="margin-left:auto; background:rgba(255,255,255,0.08); border:none;
-        border-radius:8px; width:28px; height:28px; color:rgba(245,240,232,0.6); cursor:pointer; font-size:14px; flex-shrink:0;">✕</button>
+        border-radius:8px; width:28px; height:28px; color:rgba(253,248,238,0.6); cursor:pointer; font-size:14px; flex-shrink:0;">✕</button>
     </div>
     <div style="height:1px; background:${rule.border}; margin-bottom:12px; opacity:0.4;"></div>
-    <p style="font-size:13px; color:rgba(245,240,232,0.8); line-height:1.7; margin:0;">${rule.desc}</p>
+    <p style="font-size:13px; color:rgba(253,248,238,0.8); line-height:1.7; margin:0;">${rule.desc}</p>
     <div style="margin-top:12px; padding:8px 12px; background:${rule.bg}; border-radius:10px; border-left:3px solid ${rule.color};">
       <span style="font-size:11px; color:${rule.color}; font-weight:600;">💡 Cara Baca:</span>
-      <span style="font-size:11px; color:rgba(245,240,232,0.7); margin-left:4px;">${getTajwidTip(Object.keys(TAJWID_RULES).find(k=>TAJWID_RULES[k].color===rule.color)||'mad')}</span>
+      <span style="font-size:11px; color:rgba(253,248,238,0.7); margin-left:4px;">${getTajwidTip(Object.keys(TAJWID_RULES).find(k=>TAJWID_RULES[k].color===rule.color)||'mad')}</span>
     </div>
   `;
 
@@ -3960,13 +3703,9 @@ async function loginWithGoogle() {
     document.getElementById('loginLoading').style.display = 'none';
     document.getElementById('btnLoginGoogle').disabled = false;
     if (err.code === 'auth/popup-blocked') {
-      alert('Popup diblokir browser. Klik ikon di address bar untuk izinkan popup, lalu coba lagi.');
-    } else if (err.code === 'auth/unauthorized-domain') {
-      alert('Domain belum diizinkan di Firebase.\n\nLangkah fix:\n1. Buka console.firebase.google.com\n2. Authentication → Settings → Authorized domains\n3. Tambahkan: tartil2026-ai.netlify.app\n4. Simpan, lalu coba login lagi.');
-    } else if (err.code === 'auth/operation-not-allowed') {
-      alert('Google Sign-In belum diaktifkan di Firebase.\nBuka Firebase Console → Authentication → Sign-in method → Google → Enable.');
+      alert('Popup diblokir browser. Izinkan popup untuk domain ini lalu coba lagi.');
     } else if (err.code !== 'auth/popup-closed-by-user') {
-      alert('Login gagal (' + err.code + '):\n' + err.message);
+      alert('Login gagal: ' + err.message);
     }
   }
 }
@@ -3992,7 +3731,6 @@ async function doSignOut() {
 
 // Tampilkan layar login
 function showLoginScreen() {
-  var spa = document.getElementById('spa-root'); if (spa) spa.style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('userInfo').style.display = 'none';
   document.getElementById('loginLoading').style.display = 'none';
@@ -4003,7 +3741,7 @@ function showLoginScreen() {
 }
 
 // Tampilkan app utama setelah login
-function _showAppOrig(user) {
+function showApp(user) {
   document.getElementById('loginScreen').style.display = 'none';
 
   if (user) {
@@ -4032,8 +3770,6 @@ window.onUserLoggedIn = async function(user) {
 // ── Dipanggil oleh Firebase module saat user logout ──
 window.onUserLoggedOut = function() {
   window._appInited = false;
-  var spa = document.getElementById('spa-root');
-  if (spa) spa.style.display = 'none';
   showLoginScreen();
 };
 
@@ -4168,9 +3904,7 @@ function filterSurahDrawer(q) {
 }
 
 
-/* ════════════════════════════════════════════
-   DASHBOARD JS (progress, badges, hafalan, shalat, kiblat)
-   ════════════════════════════════════════════ */
+/* ═══ DASHBOARD / PROGRESS / SHALAT ═══ */
 
 // ═══════════════════════════════════════════════════════════════════════
 // DATA & STATE
@@ -4448,7 +4182,7 @@ function renderHeatmap() {
 
   // Month labels
   months.innerHTML = Object.entries(monthLabels).map(([col, name]) =>
-    `<div style="grid-column:${parseInt(col)+1};font-size:10px;color:rgba(245,240,232,0.35);">${name}</div>`
+    `<div style="grid-column:${parseInt(col)+1};font-size:10px;color:rgba(253,246,232,0.35);">${name}</div>`
   ).join('');
   months.style.display = 'grid';
   months.style.gridTemplateColumns = `repeat(${Math.ceil(cells.length/7)}, 1fr)`;
@@ -4630,7 +4364,7 @@ function renderBadges() {
       <div class="badge-new-dot"></div>
       <div class="badge-ico ${isEarned?'':'badge-locked'}" title="${b.desc}">${b.ico}</div>
       <div class="badge-name">${b.name}</div>
-      ${isEarned?'':'<div class="badge-name" style="font-size:9px;color:rgba(245,240,232,0.25);margin-top:1px;">🔒</div>'}
+      ${isEarned?'':'<div class="badge-name" style="font-size:9px;color:rgba(253,246,232,0.25);margin-top:1px;">🔒</div>'}
     </div>`;
   }).join('');
   document.getElementById('badgesGrid').innerHTML = rows;
@@ -4706,7 +4440,7 @@ function renderSRQueue() {
 
   if (srCards.length === 0) {
     document.getElementById('srQueue').innerHTML = `
-      <div style="text-align:center;padding:32px 20px;color:rgba(245,240,232,0.3);">
+      <div style="text-align:center;padding:32px 20px;color:rgba(253,246,232,0.3);">
         <div style="font-size:36px;margin-bottom:12px;">📖</div>
         <div style="font-size:13px;">Belum ada kartu hafalan.<br>Tambahkan ayat untuk mulai menghafal!</div>
       </div>`;
@@ -4715,10 +4449,10 @@ function renderSRQueue() {
 
   const dueHtml = due.slice(0,5).map(c => cardHtml(c, true)).join('');
   const nextHtml = notDue.length ? `
-    <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(245,240,232,0.3);margin:14px 0 8px;padding:10px 0 0;border-top:1px solid rgba(255,255,255,0.05);">Selanjutnya</div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(253,246,232,0.3);margin:14px 0 8px;padding:10px 0 0;border-top:1px solid rgba(255,255,255,0.05);">Selanjutnya</div>
     ${notDue.map(c => cardHtml(c, false)).join('')}` : '';
 
-  const moreHtml = due.length > 5 ? `<div style="text-align:center;padding:10px;font-size:12px;color:rgba(245,240,232,0.35);">+${due.length-5} kartu lagi</div>` : '';
+  const moreHtml = due.length > 5 ? `<div style="text-align:center;padding:10px;font-size:12px;color:rgba(253,246,232,0.35);">+${due.length-5} kartu lagi</div>` : '';
 
   document.getElementById('srQueue').innerHTML =
     (dueHtml || `<div style="padding:16px;text-align:center;font-size:13px;color:rgba(88,214,141,0.7);">✅ Semua kartu hari ini sudah direview!</div>`) +
@@ -4800,7 +4534,7 @@ function openAddModal() {
   }
   document.getElementById('addAyatFrom').value = '';
   document.getElementById('addAyatTo').value   = '';
-  document.getElementById('ayatPreview').innerHTML = '<span style="color:rgba(245,240,232,0.3);font-family:DM Sans,sans-serif;font-size:13px;direction:ltr;">Pilih surah dan nomor ayat</span>';
+  document.getElementById('ayatPreview').innerHTML = '<span style="color:rgba(253,246,232,0.3);font-family:DM Sans,sans-serif;font-size:13px;direction:ltr;">Pilih surah dan nomor ayat</span>';
   document.getElementById('addModal').style.display = 'flex';
 }
 
@@ -4825,7 +4559,7 @@ async function updateAyatPreview() {
       preview.innerHTML = ayahs.map(a => `<div style="margin-bottom:8px;">${a.text}</div>`).join('');
     }
   } catch(e) {
-    preview.innerHTML = '<span style="font-size:13px;color:rgba(245,240,232,0.3);direction:ltr;">Gagal memuat — periksa koneksi internet</span>';
+    preview.innerHTML = '<span style="font-size:13px;color:rgba(253,246,232,0.3);direction:ltr;">Gagal memuat — periksa koneksi internet</span>';
   }
 }
 
@@ -5185,7 +4919,7 @@ function bukaModalLokasi() {
     Object.keys(KOTA_LIST).sort().forEach(function(nama) {
       var btn = document.createElement('button');
       btn.textContent = nama;
-      btn.style.cssText = 'padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(245,240,232,0.8);font-size:13px;cursor:pointer;font-family:inherit;text-align:center;width:100%;-webkit-tap-highlight-color:transparent;';
+      btn.style.cssText = 'padding:10px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(253,246,232,0.8);font-size:13px;cursor:pointer;font-family:inherit;text-align:center;width:100%;-webkit-tap-highlight-color:transparent;';
       btn.addEventListener('touchstart', function(){ this.style.background='rgba(201,162,39,0.25)'; },{passive:true});
       btn.addEventListener('touchend',   function(){ this.style.background='rgba(255,255,255,0.04)'; },{passive:true});
       btn.addEventListener('click', function(e){
@@ -5512,8 +5246,7 @@ function closeKiblat() {
 function startCompass() {
   document.getElementById('kiblatCompassStatus').textContent = '🧭 Kompas aktif — arahkan layar Anda';
   _compassWatch = function(e) {
-    const heading = (typeof e.webkitCompassHeading!=='undefined' && e.webkitCompassHeading!==null)
-      ? e.webkitCompassHeading : ((360 - (e.alpha||0)) % 360);
+    const heading = e.webkitCompassHeading || e.alpha || 0;
     if (_kiblatAngle!==null) {
       const needleAngle = _kiblatAngle - heading;
       document.getElementById('kiblatNeedle').style.transform = `rotate(${needleAngle}deg)`;
@@ -5596,9 +5329,7 @@ async function syncLeaderboardFirestore() {
 setTimeout(syncLeaderboardFirestore, 3000);
 
 
-/* ════════════════════════════════════════════
-   TAJWID JS (kurikulum, quiz)
-   ════════════════════════════════════════════ */
+/* ═══ PANDUAN TAJWID ═══ */
 
 // ═══════════════════════════════════════════════════════════════
 // DATA KURIKULUM TAJWID
@@ -5948,7 +5679,7 @@ function renderHuruf() {
   <div class="lesson-section">
     <div class="lesson-section-title">28 Huruf Hijaiyah</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:16px;line-height:1.7;">Ketuk setiap huruf untuk melihat detailnya. Huruf-huruf ini adalah fondasi membaca Al-Qur'an.</p>
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:16px;line-height:1.7;">Ketuk setiap huruf untuk melihat detailnya. Huruf-huruf ini adalah fondasi membaca Al-Qur'an.</p>
       <div class="huruf-grid">${grid}</div>
     </div>
     <div id="huruf-detail" style="display:none;margin-top:12px;" class="lesson-card highlight">
@@ -5958,7 +5689,7 @@ function renderHuruf() {
   <div class="lesson-section">
     <div class="lesson-section-title">Bentuk Huruf dalam Kata</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);line-height:1.7;margin-bottom:16px;">Beberapa huruf memiliki bentuk berbeda tergantung posisinya dalam kata: di awal, di tengah, di akhir, atau berdiri sendiri.</p>
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);line-height:1.7;margin-bottom:16px;">Beberapa huruf memiliki bentuk berbeda tergantung posisinya dalam kata: di awal, di tengah, di akhir, atau berdiri sendiri.</p>
       <div style="overflow-x:auto;">
         <table class="tajwid-table">
           <tr><th>Huruf</th><th>Berdiri Sendiri</th><th>Awal Kata</th><th>Tengah Kata</th><th>Akhir Kata</th></tr>
@@ -5980,8 +5711,8 @@ function selectHuruf(el, arab, name, latin) {
       <div style="font-family:'Amiri',serif;font-size:80px;color:var(--gold);direction:rtl;line-height:1;">${arab}</div>
       <div>
         <div style="font-size:22px;font-weight:700;color:var(--cream);margin-bottom:4px;">${name}</div>
-        <div style="font-size:14px;color:rgba(245,240,232,0.45);">Transliterasi: <strong style="color:var(--gold);">${latin}</strong></div>
-        <div style="font-size:13px;color:rgba(245,240,232,0.4);margin-top:8px;">Ketuk huruf lain untuk membandingkan</div>
+        <div style="font-size:14px;color:rgba(253,246,232,0.45);">Transliterasi: <strong style="color:var(--gold);">${latin}</strong></div>
+        <div style="font-size:13px;color:rgba(253,246,232,0.4);margin-top:8px;">Ketuk huruf lain untuk membandingkan</div>
       </div>
     </div>`;
   detail.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -5999,7 +5730,7 @@ function renderHarakat() {
   <div class="lesson-section">
     <div class="lesson-section-title">Tanda Baca (Harakat)</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:16px;line-height:1.7;">Harakat adalah tanda baca yang menentukan bunyi vokal setiap huruf. Ketuk untuk detail.</p>
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:16px;line-height:1.7;">Harakat adalah tanda baca yang menentukan bunyi vokal setiap huruf. Ketuk untuk detail.</p>
       <div class="harakat-grid">${grid}</div>
     </div>
     <div id="harakat-detail" style="display:none;margin-top:12px;" class="lesson-card highlight">
@@ -6009,12 +5740,12 @@ function renderHarakat() {
   <div class="lesson-section">
     <div class="lesson-section-title">Contoh Penerapan</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:16px;line-height:1.7;">Perhatikan bagaimana harakat mengubah bunyi huruf yang sama:</p>
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:16px;line-height:1.7;">Perhatikan bagaimana harakat mengubah bunyi huruf yang sama:</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;">
         ${[['بَ','ba'],['بِ','bi'],['بُ','bu'],['بْ','b (mati)'],['بّ','bb']].map(([s,r])=>`
         <div style="background:rgba(13,46,46,0.8);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px 20px;text-align:center;">
           <div style="font-family:'Amiri',serif;font-size:40px;color:var(--gold);direction:rtl;">${s}</div>
-          <div style="font-size:12px;color:rgba(245,240,232,0.5);margin-top:6px;">${r}</div>
+          <div style="font-size:12px;color:rgba(253,246,232,0.5);margin-top:6px;">${r}</div>
         </div>`).join('')}
       </div>
     </div>
@@ -6025,7 +5756,7 @@ function showHarakatDetail(name, read, desc) {
   const el = document.getElementById('harakat-detail');
   document.getElementById('harakat-content').innerHTML = `
     <strong style="font-size:16px;color:var(--gold);">${name}</strong>
-    <p style="font-size:13px;color:rgba(245,240,232,0.65);margin-top:8px;line-height:1.7;">${desc}</p>
+    <p style="font-size:13px;color:rgba(253,246,232,0.65);margin-top:8px;line-height:1.7;">${desc}</p>
     <p style="font-size:13px;margin-top:6px;">Cara baca: <strong style="color:var(--gold);">"${read}"</strong></p>`;
   el.style.display = 'block';
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -6051,7 +5782,7 @@ function renderMakhraj() {
   <div class="lesson-section">
     <div class="lesson-section-title">Peta Makhraj Huruf</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:20px;line-height:1.7;">Makhraj (مَخْرَج) adalah tempat keluarnya suara huruf. Bacaan yang benar bergantung pada ketepatan makhraj.</p>
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:20px;line-height:1.7;">Makhraj (مَخْرَج) adalah tempat keluarnya suara huruf. Bacaan yang benar bergantung pada ketepatan makhraj.</p>
       ${groups}
     </div>
   </div>
@@ -6083,14 +5814,14 @@ function renderHukumNun() {
       <p class="hk-desc" style="margin-top:4px;"><strong>Cara baca:</strong> ${h.cara}</p>
       <div class="hk-example" style="border:1px solid ${h.border};">
         <div style="font-size:22px;color:${h.color};">${h.contoh}</div>
-        <div style="font-size:11px;color:rgba(245,240,232,0.45);margin-top:4px;font-family:'DM Sans',sans-serif;">${h.arti}</div>
+        <div style="font-size:11px;color:rgba(253,246,232,0.45);margin-top:4px;font-family:'DM Sans',sans-serif;">${h.arti}</div>
       </div>
     </div>`).join('');
   return `
   <div class="lesson-section">
     <div class="lesson-section-title">Hukum Nun Sukun & Tanwin (5 Hukum)</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:20px;line-height:1.7;">
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:20px;line-height:1.7;">
         Nun sukun (نْ) dan tanwin (ً ٍ ٌ) memiliki 5 hukum bacaan tergantung huruf yang mengikutinya.
       </p>
       <div class="hukum-grid">${cards}</div>
@@ -6125,14 +5856,14 @@ function renderHukumMim() {
       <p class="hk-desc" style="margin-top:4px;"><strong>Cara baca:</strong> ${h.cara}</p>
       <div class="hk-example" style="border:1px solid ${h.border};">
         <div style="font-size:20px;color:${h.color};">${h.contoh}</div>
-        <div style="font-size:11px;color:rgba(245,240,232,0.45);margin-top:4px;font-family:'DM Sans',sans-serif;">${h.arti}</div>
+        <div style="font-size:11px;color:rgba(253,246,232,0.45);margin-top:4px;font-family:'DM Sans',sans-serif;">${h.arti}</div>
       </div>
     </div>`).join('');
   return `
   <div class="lesson-section">
     <div class="lesson-section-title">Hukum Mim Sukun (3 Hukum)</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:20px;line-height:1.7;">
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:20px;line-height:1.7;">
         Mim sukun (مْ) memiliki 3 hukum bacaan. Ketiga hukum ini disebut "syafawi" karena berkaitan dengan bibir (syafah = bibir).
       </p>
       <div class="hukum-grid">${cards}</div>
@@ -6148,20 +5879,20 @@ function renderMad() {
         <div class="mad-name">${m.name}</div>
       </div>
       <div class="mad-desc">${m.desc}</div>
-      <div class="mad-harakah">${m.harakah}<br><span style="font-size:10px;color:rgba(245,240,232,0.4);font-weight:400;">harakat</span></div>
+      <div class="mad-harakah">${m.harakah}<br><span style="font-size:10px;color:rgba(253,246,232,0.4);font-weight:400;">harakat</span></div>
     </div>`).join('');
   return `
   <div class="lesson-section">
     <div class="lesson-section-title">Pengertian Mad</div>
     <div class="lesson-card">
-      <p style="font-size:14px;color:rgba(245,240,232,0.65);line-height:1.8;margin-bottom:16px;">
+      <p style="font-size:14px;color:rgba(253,246,232,0.65);line-height:1.8;margin-bottom:16px;">
         <strong style="color:var(--cream);">Mad (مَدّ)</strong> artinya memanjangkan. Dalam ilmu tajwid, mad adalah memanjangkan suara pada huruf mad (ا و ي) sesuai dengan ketentuan yang berlaku.
       </p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
         ${['اَ→آ','وُ→وْو','يِ→يِي'].map(ex=>`
         <div style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.2);border-radius:10px;padding:12px 16px;font-family:'Amiri',serif;font-size:22px;direction:rtl;color:var(--gold);">${ex}</div>`).join('')}
       </div>
-      <p style="font-size:12px;color:rgba(245,240,232,0.4);line-height:1.7;">1 harakat ≈ 1 ketukan jari. Mad dasar = 2 harakat.</p>
+      <p style="font-size:12px;color:rgba(253,246,232,0.4);line-height:1.7;">1 harakat ≈ 1 ketukan jari. Mad dasar = 2 harakat.</p>
     </div>
   </div>
   <div class="lesson-section">
@@ -6176,12 +5907,12 @@ function renderMad() {
       <div style="display:grid;grid-template-columns:auto auto;gap:12px;max-width:500px;">
         <div style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.2);border-radius:12px;padding:16px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:#C9A227;margin-bottom:8px;">Mad Asli (Tabi'i)</div>
-          <div style="font-size:12px;color:rgba(245,240,232,0.5);">Dasar semua mad</div>
+          <div style="font-size:12px;color:rgba(253,246,232,0.5);">Dasar semua mad</div>
           <div style="font-size:20px;font-weight:800;color:#C9A227;margin-top:8px;">2 harakat</div>
         </div>
         <div style="background:rgba(93,173,226,0.08);border:1px solid rgba(93,173,226,0.2);border-radius:12px;padding:16px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:#5DADE2;margin-bottom:8px;">Mad Far'i (Cabang)</div>
-          <div style="font-size:12px;color:rgba(245,240,232,0.5);">Turunan mad asli</div>
+          <div style="font-size:12px;color:rgba(253,246,232,0.5);">Turunan mad asli</div>
           <div style="font-size:20px;font-weight:800;color:#5DADE2;margin-top:8px;">2–6 harakat</div>
         </div>
       </div>
@@ -6195,14 +5926,14 @@ function renderWaqaf() {
   <div class="lesson-section">
     <div class="lesson-section-title">Qalqalah — Memantul</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:16px;line-height:1.7;">
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:16px;line-height:1.7;">
         <strong style="color:var(--cream);">Qalqalah</strong> artinya guncangan atau pantulan suara. Terjadi pada 5 huruf qalqalah ketika sukun atau diwaqafkan.
       </p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
         ${['ق','ب','ج','د','ط'].map(h=>`
         <div style="background:rgba(195,155,211,0.1);border:2px solid rgba(195,155,211,0.35);border-radius:12px;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:36px;color:#C39BD3;">${h}</div>`).join('')}
       </div>
-      <p style="font-size:12px;color:rgba(245,240,232,0.5);margin-bottom:16px;">Disingkat: <strong style="color:#C39BD3;">قُطْبُ جَدٍّ</strong> (qutbu jaddin)</p>
+      <p style="font-size:12px;color:rgba(253,246,232,0.5);margin-bottom:16px;">Disingkat: <strong style="color:#C39BD3;">قُطْبُ جَدٍّ</strong> (qutbu jaddin)</p>
       <table class="tajwid-table">
         <tr><th>Tingkatan</th><th>Kondisi</th><th>Kekuatan</th></tr>
         <tr><td><strong style="color:#C39BD3;">Qalqalah Sughra</strong></td><td>Huruf qalqalah sukun di tengah kata</td><td>Lemah</td></tr>
@@ -6214,7 +5945,7 @@ function renderWaqaf() {
   <div class="lesson-section">
     <div class="lesson-section-title">Waqaf — Tanda Berhenti</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);margin-bottom:16px;line-height:1.7;">
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);margin-bottom:16px;line-height:1.7;">
         <strong style="color:var(--cream);">Waqaf (وَقْف)</strong> adalah berhenti sejenak pada akhir kata. Tanda waqaf di mushaf Al-Qur'an:
       </p>
       <table class="tajwid-table">
@@ -6223,7 +5954,7 @@ function renderWaqaf() {
         <tr><td style="font-family:'Amiri',serif;font-size:22px;direction:rtl;color:var(--gold);text-align:center;">ط</td><td>Waqaf Mutlaq</td><td>Berhenti adalah yang lebih sempurna.</td></tr>
         <tr><td style="font-family:'Amiri',serif;font-size:22px;direction:rtl;color:var(--gold);text-align:center;">ج</td><td>Waqaf Jaiz</td><td>Boleh berhenti, boleh terus. Keduanya diizinkan.</td></tr>
         <tr><td style="font-family:'Amiri',serif;font-size:22px;direction:rtl;color:var(--gold);text-align:center;">ز</td><td>Waqaf Mujawwaz</td><td>Lebih baik terus, boleh berhenti.</td></tr>
-        <tr><td style="font-family:'Amiri',serif;font-size:22px;direction:rtl;color:#F56565;text-align:center;">لا</td><td>Waqaf Mamnu'</td><td style="color:#F56565;font-weight:600;">Dilarang berhenti di sini karena merusak makna.</td></tr>
+        <tr><td style="font-family:'Amiri',serif;font-size:22px;direction:rtl;color:#E74C3C;text-align:center;">لا</td><td>Waqaf Mamnu'</td><td style="color:#E74C3C;font-weight:600;">Dilarang berhenti di sini karena merusak makna.</td></tr>
         <tr><td style="font-family:'Amiri',serif;font-size:22px;direction:rtl;color:var(--gold);text-align:center;">∴</td><td>Mu'anaqah</td><td>Ada dua tempat waqaf berpasangan, boleh berhenti di salah satunya saja.</td></tr>
       </table>
     </div>
@@ -6231,10 +5962,10 @@ function renderWaqaf() {
   <div class="lesson-section">
     <div class="lesson-section-title">Ibtida — Memulai Kembali</div>
     <div class="lesson-card">
-      <p style="font-size:13px;color:rgba(245,240,232,0.55);line-height:1.7;margin-bottom:12px;">
+      <p style="font-size:13px;color:rgba(253,246,232,0.55);line-height:1.7;margin-bottom:12px;">
         <strong style="color:var(--cream);">Ibtida (ابتداء)</strong> adalah memulai kembali bacaan setelah berhenti. Ibtida yang baik:
       </p>
-      <ul style="font-size:13px;color:rgba(245,240,232,0.55);line-height:1.8;padding-left:20px;">
+      <ul style="font-size:13px;color:rgba(253,246,232,0.55);line-height:1.8;padding-left:20px;">
         <li>Mulai dari awal ayat atau awal kalimat yang sempurna</li>
         <li>Jangan memulai dari tengah kata atau kalimat yang merusak makna</li>
         <li>Ambil nafas yang cukup sebelum memulai kembali</li>
@@ -6250,7 +5981,7 @@ function renderQuiz(babId) {
   const qs = QUIZ[babId];
   if (!qs) return '';
   const sc = babScores[babId];
-  const scInfo = sc !== undefined ? `<span style="font-size:13px;color:rgba(245,240,232,0.45);">Skor sebelumnya: <strong style="color:${sc>=70?'#58D68D':'#E67E22'};">${sc}/100</strong></span>` : '';
+  const scInfo = sc !== undefined ? `<span style="font-size:13px;color:rgba(253,246,232,0.45);">Skor sebelumnya: <strong style="color:${sc>=70?'#58D68D':'#E67E22'};">${sc}/100</strong></span>` : '';
 
   return `
   <div class="quiz-section" id="quizSection">
@@ -6339,7 +6070,7 @@ function showQuizResult(babId) {
     <div class="quiz-result">
       <div class="qr-score" style="color:${color};">${score}<span style="font-size:28px;">/100</span></div>
       <div class="qr-msg">${msg}</div>
-      <div style="font-size:13px;color:rgba(245,240,232,0.4);margin-bottom:24px;">Benar: ${quizState.score} dari ${qs.length} soal</div>
+      <div style="font-size:13px;color:rgba(253,246,232,0.4);margin-bottom:24px;">Benar: ${quizState.score} dari ${qs.length} soal</div>
       <button class="btn-retry" onclick="retryQuiz(${babId})">🔄 Ulangi Quiz</button>
       ${currentBab < KURIKULUM.length ? `<button class="btn-nxt" onclick="selectBab(${currentBab+1})">Bab Berikutnya →</button>` : ''}
     </div>`;
@@ -6361,7 +6092,7 @@ function renderLessonNav() {
     <button class="btn-prev" ${!prev?'style="opacity:.3;cursor:default"':''} onclick="${prev?`selectBab(${currentBab-1})`:''}">
       ← ${prev ? KURIKULUM[currentBab-2].title : 'Ini bab pertama'}
     </button>
-    <div style="font-size:12px;color:rgba(245,240,232,0.3);">Bab ${currentBab} / ${KURIKULUM.length}</div>
+    <div style="font-size:12px;color:rgba(253,246,232,0.3);">Bab ${currentBab} / ${KURIKULUM.length}</div>
     ${next ? `<button class="btn-nxt" onclick="selectBab(${currentBab+1})">
       ${KURIKULUM[currentBab].title} →
     </button>` : `<button class="btn-nxt" onclick="window.location.href='tartil-quran.html'" style="background:linear-gradient(135deg,#5DADE2,#2E86C1);">
@@ -6448,17 +6179,8 @@ function closeDrawer() {
 
 
 
-function checkBadges() { if (typeof renderBadges === 'function') renderBadges(); }
-/* ════════════════════════════════════════════
-   SPA CONTROLLER
-   ════════════════════════════════════════════ */
 
-/* ════════════════════════════════════════════
-   SPA CONTROLLER
-   ════════════════════════════════════════════ */
-var _spaInited = {};
-var _spaCurrentTab = 'tartil';
-
+/* ═══ SPA FUNCTIONS ═══ */
 function spaSwitch(tab) {
   if (_spaCurrentTab === tab) return;
   _spaCurrentTab = tab;
@@ -6491,99 +6213,9 @@ function spaSwitch(tab) {
   }
 }
 
-function showApp(user) {
-  // Sembunyikan login, tampilkan SPA
-  var ls = document.getElementById('loginScreen');
-  if (ls) ls.style.display = 'none';
-  var spa = document.getElementById('spa-root');
-  if (spa) spa.style.display = 'flex';
-
-  if (user) {
-    var ui = document.getElementById('userInfo');
-    if (ui) {
-      ui.style.display = 'flex';
-      var av = document.getElementById('userAvatar');
-      var nm = document.getElementById('userName');
-      if (av) av.src = user.photoURL || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(user.displayName || 'U');
-      if (nm) nm.textContent = (user.displayName || user.email || 'User').split(' ')[0];
-    }
-    // Juga update nav di tajwid/dash tabs
-    ['navAv','navNm'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      if (id === 'navAv') el.src = user.photoURL || '';
-      if (id === 'navNm') el.textContent = (user.displayName || '').split(' ')[0];
-    });
-  }
-
-  if (!window._appInited) {
-    window._appInited = true;
-    try { init(); } catch(e) { console.warn('tartil init:', e); }
-    try { initShalat(); } catch(e) { console.warn('shalat init:', e); }
-  }
-}
-
-// Ibadah tab content - render shalat + kiblat info
-function renderIbadahTab() {
-  var c = document.getElementById('ibadah-content');
-  if (!c) return;
-  c.innerHTML = `
-    <div style="background:rgba(24,27,35,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin-bottom:16px;">
-      <div style="font-size:13px;color:rgba(245,240,232,0.5);margin-bottom:6px;">Waktu Shalat Berikutnya</div>
-      <div style="font-size:28px;font-weight:700;color:#C9A227;" id="ib-next-name">—</div>
-      <div style="font-size:18px;color:rgba(245,240,232,0.8);margin-top:4px;" id="ib-countdown">—</div>
-      <div style="font-size:12px;color:rgba(245,240,232,0.4);margin-top:8px;" id="ib-city">📍 Jember</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;" id="ib-times"></div>
-    <button onclick="openKiblat()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9A227,#8B6F15);border:none;border-radius:12px;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
-      🧭 Tampilkan Arah Kiblat
-    </button>
-    <button onclick="bukaModalLokasi()" style="width:100%;padding:12px;margin-top:8px;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.25);border-radius:12px;color:rgba(245,240,232,0.7);font-size:13px;cursor:pointer;font-family:inherit;">
-      📍 Ganti Kota
-    </button>
-  `;
-  // Sync data dari shalat yang sudah di-fetch
-  syncIbadahTab();
-}
-
-function syncIbadahTab() {
-  // Sync nama shalat dan countdown
-  var nn = document.getElementById('shalatNextName');
-  var cd = document.getElementById('shalatCountdown');
-  var sc = document.getElementById('shalatCity');
-  if (nn) { var ibn = document.getElementById('ib-next-name'); if (ibn) ibn.textContent = nn.textContent; }
-  if (cd) { var ibc = document.getElementById('ib-countdown');  if (ibc) ibc.textContent = cd.textContent; }
-  if (sc) { var ibs = document.getElementById('ib-city'); if (ibs) ibs.textContent = sc.textContent; }
-
-  // Sync jadwal shalat
-  var st = document.getElementById('shalatTimes');
-  var it = document.getElementById('ib-times');
-  if (st && it) {
-    it.innerHTML = st.innerHTML;
-  }
-  // Repeat sync tiap 10 detik jika tab aktif
-  if (_spaCurrentTab === 'ibadah') {
-    setTimeout(syncIbadahTab, 10000);
-  }
-}
-
-// Dashboard init function wrapper
-function initDashboard() {
-  // Fungsi dari dash_js
-  if (typeof buildDashboard === 'function') buildDashboard();
-  else if (typeof renderLeaderboard === 'function') renderLeaderboard();
-  if (typeof calcStreak === 'function') calcStreak();
-  if (typeof checkBadges === 'function') checkBadges();
-}
 
 
-
-// ═══ FITUR BARU ═══
-// ═══════════════════════════════════════════════════════════════
-// FITUR BARU: MODE HAFALAN + VOICE SEARCH + RIWAYAT KESALAHAN
-// + SMART GOALS UI + PEEKING MODE + JUZ NAVIGATOR
-
-
+/* ═══ FITUR TARTEEL ═══ */
 
 // ══════════════════════════════════════════════════════════════════
 // DARK MODE
@@ -7101,11 +6733,8 @@ function renderModeToolbar() {
   var juzNum = currentSurah ? getJuzForSurah(currentSurah) : '';
   toolbar.appendChild(mkBtn('&#x1F4D6; Juz ' + juzNum, showJuzNavigator, false, 201, 162, 39));
 
-  // Sisipkan toolbar setelah .tabs nav, sebelum content-area
   var tabsNav = document.querySelector('.tabs');
   if (tabsNav && tabsNav.parentNode) {
-    var existing2 = document.getElementById('modeToolbar');
-    if (existing2) existing2.remove();
     tabsNav.parentNode.insertBefore(toolbar, tabsNav.nextSibling);
   } else {
     container.parentNode.insertBefore(toolbar, container);
@@ -7168,9 +6797,6 @@ function closeAllModals() {
 
 
 
-// ══════════════════════════════════════════════════════════════════
-// TAB TERJEMAH — full quran dengan terjemahan
-// ══════════════════════════════════════════════════════════════════
 function renderTerjemahTab() {
   var container = document.getElementById('terjemahContainer');
   if (!container) return;
@@ -7180,7 +6806,7 @@ function renderTerjemahTab() {
   }
   var ayats = getAyatForSurah(currentSurah);
   if (!ayats || !ayats.length) {
-    container.innerHTML = '<div style="text-align:center;padding:48px;color:rgba(245,240,232,0.35);">&#9203; Memuat terjemahan...</div>';
+    container.innerHTML = '<div style="text-align:center;padding:48px;color:rgba(245,240,232,0.35);">Memuat...</div>';
     fetchAndRenderAyat(currentSurah);
     setTimeout(renderTerjemahTab, 2000);
     return;
@@ -7188,22 +6814,19 @@ function renderTerjemahTab() {
   var html = '';
   for (var i = 0; i < ayats.length; i++) {
     var a = ayats[i];
-    html += '<div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05);direction:ltr;">' +
+    html += '<div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05);">' +
       '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">' +
         '<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);' +
         'border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0;">' + a.id + '</span>' +
       '</div>' +
-      '<div style="font-family:'Amiri',serif;font-size:26px;line-height:2.2;direction:rtl;' +
+      '<div style="font-family:Amiri,serif;font-size:26px;line-height:2.2;direction:rtl;' +
       'text-align:right;color:var(--cream);margin-bottom:14px;">' + a.arabic + '</div>' +
       '<div style="font-size:14px;color:rgba(245,240,232,0.75);line-height:1.8;">' +
-        (a.translation || '<span style="color:rgba(245,240,232,0.3);font-size:12px;">Terjemahan belum tersedia</span>') +
-      '</div>' +
-    '</div>';
+        (a.translation || '<span style="font-size:12px;color:rgba(245,240,232,0.3);">Terjemahan belum tersedia</span>') +
+      '</div></div>';
   }
   container.innerHTML = html;
 }
 
 </script>
-
-</body>
 </html>
