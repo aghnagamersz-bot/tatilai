@@ -1279,6 +1279,18 @@ body.light-mode #darkModeBtn {
   color: #1a1408;
 }
 
+
+/* ── MODE TOOLBAR ── */
+#modeToolbar {
+  padding: 10px 20px 0;
+  background: transparent;
+  z-index: 10;
+  position: relative;
+}
+#modeToolbar button {
+  white-space: nowrap;
+}
+
 </style>
 </head>
 <body>
@@ -1590,6 +1602,7 @@ service cloud.firestore {
     <!-- Tabs -->
     <div class="tabs">
       <div class="tab active" onclick="switchTab('baca', this)">📖 Baca & Latihan</div>
+      <div class="tab" onclick="switchTab('terjemah', this)">🌏 Terjemah</div>
       <div class="tab" onclick="switchTab('dengar', this)">🎧 Dengar Qori</div>
       <div class="tab" onclick="switchTab('tajwid', this)">📚 Panduan Tajwid</div>
       <div class="tab" onclick="switchTab('skor', this)">📊 Skor & Progress</div>
@@ -1604,6 +1617,11 @@ service cloud.firestore {
           بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
         </div>
         <div class="ayat-container" id="ayatContainer"></div>
+      </div>
+
+      <!-- TAB TERJEMAH -->
+      <div class="tab-content" id="tab-terjemah">
+        <div id="terjemahContainer" style="padding:8px 0;"></div>
       </div>
 
       <!-- TAB DENGAR -->
@@ -2617,10 +2635,7 @@ function renderAyat(surahId) {
         ${coloredAyah}
       </div>
 
-      <!-- Terjemahan -->
-      <div style="font-size:12px;color:rgba(245,240,232,0.45);direction:ltr;
-        line-height:1.6;border-top:1px solid rgba(255,255,255,0.06);
-        padding-top:8px;">${a.translation || ''}</div>
+      <!-- Terjemahan disembunyikan - lihat tab Terjemah -->
 
       <!-- Status rekam -->
       <div id="rec-status-${a.id}"
@@ -2733,6 +2748,8 @@ function init() {
   renderQoriList();
   renderTajwidGuide();
   selectSurah(1);
+  // Render toolbar setelah semua siap
+  setTimeout(renderModeToolbar, 300);
 }
 
 // Render seluruh kata dalam satu ayat dengan warna tajwid
@@ -3768,10 +3785,12 @@ function switchTab(tabId, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   if(el) el.classList.add('active');
-  const content = document.getElementById(`tab-${tabId}`);
+  const content = document.getElementById('tab-' + tabId);
   if(content) content.classList.add('active');
-  if(tabId === 'skor') renderScoreTab();
-  if(tabId === 'dengar') renderAyatDengar(currentSurah);
+  // Render terjemah saat tab terjemah dibuka
+  if (tabId === 'terjemah') renderTerjemahTab();
+  // Render toolbar saat tab baca aktif
+  if (tabId === 'baca') setTimeout(renderModeToolbar, 60);
 }
 
 // ===================================
@@ -7082,7 +7101,15 @@ function renderModeToolbar() {
   var juzNum = currentSurah ? getJuzForSurah(currentSurah) : '';
   toolbar.appendChild(mkBtn('&#x1F4D6; Juz ' + juzNum, showJuzNavigator, false, 201, 162, 39));
 
-  container.parentNode.insertBefore(toolbar, container);
+  // Sisipkan toolbar setelah .tabs nav, sebelum content-area
+  var tabsNav = document.querySelector('.tabs');
+  if (tabsNav && tabsNav.parentNode) {
+    var existing2 = document.getElementById('modeToolbar');
+    if (existing2) existing2.remove();
+    tabsNav.parentNode.insertBefore(toolbar, tabsNav.nextSibling);
+  } else {
+    container.parentNode.insertBefore(toolbar, container);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -7139,6 +7166,42 @@ function closeAllModals() {
   setTimeout(tryAddJuzBtn, 600);
 })();
 
+
+
+// ══════════════════════════════════════════════════════════════════
+// TAB TERJEMAH — full quran dengan terjemahan
+// ══════════════════════════════════════════════════════════════════
+function renderTerjemahTab() {
+  var container = document.getElementById('terjemahContainer');
+  if (!container) return;
+  if (!currentSurah) {
+    container.innerHTML = '<div style="text-align:center;padding:48px;color:rgba(245,240,232,0.35);">Pilih surah terlebih dahulu</div>';
+    return;
+  }
+  var ayats = getAyatForSurah(currentSurah);
+  if (!ayats || !ayats.length) {
+    container.innerHTML = '<div style="text-align:center;padding:48px;color:rgba(245,240,232,0.35);">&#9203; Memuat terjemahan...</div>';
+    fetchAndRenderAyat(currentSurah);
+    setTimeout(renderTerjemahTab, 2000);
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < ayats.length; i++) {
+    var a = ayats[i];
+    html += '<div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05);direction:ltr;">' +
+      '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">' +
+        '<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);' +
+        'border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0;">' + a.id + '</span>' +
+      '</div>' +
+      '<div style="font-family:'Amiri',serif;font-size:26px;line-height:2.2;direction:rtl;' +
+      'text-align:right;color:var(--cream);margin-bottom:14px;">' + a.arabic + '</div>' +
+      '<div style="font-size:14px;color:rgba(245,240,232,0.75);line-height:1.8;">' +
+        (a.translation || '<span style="color:rgba(245,240,232,0.3);font-size:12px;">Terjemahan belum tersedia</span>') +
+      '</div>' +
+    '</div>';
+  }
+  container.innerHTML = html;
+}
 
 </script>
 
