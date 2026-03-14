@@ -2634,7 +2634,7 @@ function renderAyat(surahId) {
 }
 
 // Fetch ayat dari API jika tidak ada di cache/static
-async async function fetchAndRenderAyat(surahId) {
+async function fetchAndRenderAyat(surahId) {
   try {
     const res  = await fetch(`https://api.alquran.cloud/v1/surah/${surahId}`);
     const data = await res.json();
@@ -3923,7 +3923,7 @@ function isFirebaseConfigured() {
 }
 
 // Login dengan Google
-async async function loginWithGoogle() {
+async function loginWithGoogle() {
   // Cek konfigurasi Firebase
   const scriptContent = document.querySelector('script[type="module"]')?.textContent || '';
   if (scriptContent.includes('GANTI_API_KEY_ANDA')) {
