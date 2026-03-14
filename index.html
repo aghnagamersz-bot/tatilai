@@ -3923,7 +3923,7 @@ function isFirebaseConfigured() {
 }
 
 // Login dengan Google
-async function loginWithGoogle() {
+async async function loginWithGoogle() {
   // Cek konfigurasi Firebase
   const scriptContent = document.querySelector('script[type="module"]')?.textContent || '';
   if (scriptContent.includes('GANTI_API_KEY_ANDA')) {
@@ -3941,9 +3941,13 @@ async function loginWithGoogle() {
     document.getElementById('loginLoading').style.display = 'none';
     document.getElementById('btnLoginGoogle').disabled = false;
     if (err.code === 'auth/popup-blocked') {
-      alert('Popup diblokir browser. Izinkan popup untuk domain ini lalu coba lagi.');
+      alert('Popup diblokir browser. Klik ikon di address bar untuk izinkan popup, lalu coba lagi.');
+    } else if (err.code === 'auth/unauthorized-domain') {
+      alert('Domain belum diizinkan di Firebase.\n\nLangkah fix:\n1. Buka console.firebase.google.com\n2. Authentication → Settings → Authorized domains\n3. Tambahkan: tartil2026-ai.netlify.app\n4. Simpan, lalu coba login lagi.');
+    } else if (err.code === 'auth/operation-not-allowed') {
+      alert('Google Sign-In belum diaktifkan di Firebase.\nBuka Firebase Console → Authentication → Sign-in method → Google → Enable.');
     } else if (err.code !== 'auth/popup-closed-by-user') {
-      alert('Login gagal: ' + err.message);
+      alert('Login gagal (' + err.code + '):\n' + err.message);
     }
   }
 }
