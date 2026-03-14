@@ -1231,6 +1231,31 @@
     header { padding-top: env(safe-area-inset-top, 0px); }
     #bottom-nav { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important; }
   }
+
+/* ── KIBLAT OVERLAY ── */
+.kiblat-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+.kiblat-overlay.open {
+  display: flex;
+}
+.kiblat-card {
+  background: var(--bg2, #1a1f2e);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 28px 24px;
+  max-width: 340px;
+  width: 92%;
+  text-align: center;
+}
+
 </style>
 </head>
 <body>
@@ -2115,7 +2140,7 @@ service cloud.firestore {
 </div>
 
 <!-- MODAL KIBLAT -->
-<div class="kiblat-overlay" id="kiblatOverlay" onclick="closeKiblat()">
+<div class="kiblat-overlay" id="kiblatOverlay" onclick="closeKiblat()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
   <div class="kiblat-card" onclick="event.stopPropagation()">
     <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:4px;">🕌 Arah Kiblat</div>
     <div style="font-size:12px;color:rgba(245,240,232,0.45);margin-bottom:20px;" id="kiblatDesc">Menghitung arah kiblat...</div>
@@ -4754,8 +4779,8 @@ document.addEventListener('DOMContentLoaded', () => {
 loadLocal();
 renderAll();
 
-// Jalankan deteksi shalat SEGERA, tidak perlu tunggu login
-initShalat();
+// initShalat dipanggil saat tab Ibadah dibuka (di spaSwitch)
+// bukan di sini supaya tidak auto-open kiblat saat login
 
 // Check due cards on load
 setTimeout(() => {
@@ -6208,6 +6233,7 @@ function spaSwitch(tab) {
     }
     if (tab === 'ibadah') {
       // Init ibadah tab
+      try { initShalat(); } catch(e) { console.warn('shalat init:', e); }
       try { renderIbadahTab(); } catch(e) { console.warn('ibadah init:', e); }
     }
   }
